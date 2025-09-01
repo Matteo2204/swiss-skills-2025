@@ -24,11 +24,11 @@ export function registerAuthHandlers() {
         const db = getDB();
 
         // Tipiamo la statement: bind [string], result DbUserRow
-        const stmt = db.prepare<[string], DbUserRow>(
+        const stmt = db.prepare(
             "SELECT id, username, password_hash, role FROM users WHERE username = ?"
         );
 
-        const row = stmt.get(username); // row: DbUserRow | undefined
+        const row = await stmt.get(username) as DbUserRow | undefined; // row: DbUserRow | undefined
 
         if (!row) return { ok: false, error: "INVALID_CREDENTIALS" };
 
@@ -60,16 +60,22 @@ export function registerAuthHandlers() {
         if (!u || !p) return { ok: false, error: 'INVALID_INPUT' };
 
         // esiste già?
-        const exists = db.prepare('SELECT 1 FROM users WHERE username = ?').get(u);
+        const exists = await db.prepare('SELECT 1 FROM users WHERE username = ?').get(u);
         if (exists) return { ok: false, error: 'USERNAME_TAKEN' };
 
         try {
             const hash = await argon2.hash(p);
             const role: Role = 'OPERATOR'; // default
-            db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?,?,?)').run(u, hash, role);
+            await db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?,?,?)').run(u, hash, role);
             return { ok: true };
         } catch (err: any) {
-            if (err?.code === 'SQLITE_CONSTRAINT' || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+            // Handle both SQLite and MySQL duplicate key errors
+            if (
+                err?.code === 'SQLITE_CONSTRAINT' ||
+                err?.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+                err?.code === 'ER_DUP_ENTRY' ||
+                err?.errno === 1062
+            ) {
                 return { ok: false, error: 'USERNAME_TAKEN' };
             }
             console.error('[auth:register] error', err);

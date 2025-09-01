@@ -2,8 +2,8 @@ import {
   ChangeDetectionStrategy, Component, input, output
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import type { SideNavItem, TopbarAction, SideUser } from '../features/sidebar/sidebar.component';
 import {NgOptimizedImage} from '@angular/common';
+import {SideNavItem, SideUser, TopbarAction} from '@shared/sidebar/sidebar.component';
 
 export interface Crumb { label: string; route?: string; }
 

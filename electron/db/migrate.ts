@@ -1,24 +1,23 @@
 // electron/db/migrate.ts
 import fs from 'fs';
 import path from 'path';
-import type DatabaseNS from 'better-sqlite3';
 import { getDB } from './index';
 
-type DB = DatabaseNS.Database;
+type DB = ReturnType<typeof getDB>;
 
 function log(...a: unknown[]) { console.log('[migrate]', ...a); }
 
 /** Legge la versione attuale da app_meta (fallback 1 se non c’è) */
-export function getSchemaVersion(db: DB): number {
-    const row = db.prepare("SELECT value FROM app_meta WHERE key='schema_version'")
+export async function getSchemaVersion(db: DB): Promise<number> {
+    const row = await db.prepare("SELECT value FROM app_meta WHERE key='schema_version'")
         .get() as { value: string } | undefined;
     return row ? Number(row.value) : 1;
 }
 
-function setSchemaVersion(db: DB, v: number) {
-    db.prepare("INSERT INTO app_meta(key,value) VALUES('schema_version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")
+async function setSchemaVersion(db: DB, v: number) {
+    // MySQL variant: ON DUPLICATE KEY UPDATE
+    await db.prepare("INSERT INTO app_meta(`key`,`value`) VALUES('schema_version',?) ON DUPLICATE KEY UPDATE `value`=VALUES(`value`)")
         .run(String(v));
-    db.pragma(`user_version = ${v}`); // opzionale: tieni allineato anche PRAGMA user_version
 }
 
 function backupDbFile(dbFile: string) {
@@ -40,13 +39,12 @@ interface Migration {
     up: (db: DB) => void;
 }
 
-const MIGRATIONS: Migration[] = [
-];
+const MIGRATIONS: Migration[] = [];
 
 /** Esegue tutte le migrazioni mancanti in ordine, in transazione per step */
-export function runMigrationsIfNeeded(dbFile: string) {
+export async function runMigrationsIfNeeded(_dbFile: string) {
     const db = getDB();
-    let current = getSchemaVersion(db);
+    let current = await getSchemaVersion(db);
     const latest = MIGRATIONS.length ? Math.max(...MIGRATIONS.map(m => m.id)) : current;
 
     if (current >= latest) {
@@ -55,20 +53,20 @@ export function runMigrationsIfNeeded(dbFile: string) {
     }
 
     log(`from v${current} → v${latest}`);
-    backupDbFile(dbFile);
+    // In MySQL we typically backup at server level; skip file backup
 
     for (const m of MIGRATIONS.sort((a,b)=>a.id-b.id)) {
         if (m.id <= current) continue;
         log(`applying #${m.id} ${m.name} ...`);
-        db.exec('BEGIN');
+        await db.exec('START TRANSACTION');
         try {
-            m.up(db);
-            setSchemaVersion(db, m.id);
-            db.exec('COMMIT');
+            m.up(db as any);
+            await setSchemaVersion(db, m.id);
+            await db.exec('COMMIT');
             current = m.id;
             log(`done #${m.id}`);
         } catch (e) {
-            db.exec('ROLLBACK');
+            await db.exec('ROLLBACK');
             log(`FAILED #${m.id}:`, (e as Error)?.message);
             throw e;
         }

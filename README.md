@@ -5,7 +5,7 @@ Tech stack:
 
 - **Frontend**: Angular 20
 - **Desktop wrapper**: Electron 31
-- **Database**: SQLite (via `better-sqlite3`)
+- **Database**: MySQL (via `mysql2`)
 - **Auth**: Argon2 password hashing + in-memory sessions
 - **Local server**: Express 5 (serves the Angular build in packaged mode)
 - **Packaging**: electron-builder (DMG on macOS, ZIP on Windows)
@@ -171,22 +171,14 @@ Handlers are registered early in `main.ts` **before** any `loadURL()`.
 
 ## Database & data persistence
 
-- Engine: **SQLite**, driver **better-sqlite3**.
-- Schema is applied from `electron/db/schema.sql` on first launch.
+- Engine: **MySQL**, driver **mysql2**.
+- Schema is applied from `electron/db/schema.mysql.sql` on first launch.
+- Configure via env vars (`MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`).
 - Seed users (example):
     - `admin` / `admin123` (role: ADMIN)
     - `operator` / `operator123` (role: OPERATOR)
 
-**Portable DB path** (created automatically):
 
-- **Dev**: a `data/` folder next to your running binary (project root during dev).
-- **Packaged (macOS)**:  
-  `Skill09App.app/Contents/MacOS/data/app.db`  
-  (you’ll see a log like: `Portable data directory: .../Contents/MacOS/data`)
-- **Packaged (Windows)**:  
-  next to `Skill09App.exe` → `.\data\app.db`
-
-> Change it in your `getPortableDataDir()` implementation if you prefer `app.getPath('userData')`.
 
 ---
 
@@ -262,7 +254,28 @@ For quicker testing:
 npx electron-builder --mac zip
 ```
 
-### Native modules mismatch (argon2 / better-sqlite3)
+### Database Configuration (MySQL)
+
+- Set the following environment variables before running the app:
+  - `MYSQL_HOST` (default `localhost`)
+  - `MYSQL_PORT` (default `3306`)
+  - `MYSQL_USER`
+  - `MYSQL_PASSWORD` (optional if user has no password)
+  - `MYSQL_DATABASE`
+
+- On startup, the app creates the database if missing and applies `electron/db/schema.mysql.sql`.
+
+### Data Migration from SQLite
+
+If you already have local data in `./data/app.db` (SQLite), migrate it with:
+
+```
+MYSQL_HOST=localhost MYSQL_USER=root MYSQL_PASSWORD=secret MYSQL_DATABASE=skill09 npm run db:migrate:data
+```
+
+Optional: set `SQLITE_PATH` to point to a custom `.db` file.
+
+### Native modules mismatch (argon2)
 If you change Electron version:
 ```bash
 npm run deps:rebuild
@@ -281,7 +294,7 @@ npm run deps:rebuild
 - Electron: 31.7.x
 - Angular: 20.x
 - Express: 5.x
-- better-sqlite3: 12.x (types via `@types/better-sqlite3@7.x`)
+- mysql2: 3.x
 - Argon2: 0.41.x
 
 ---

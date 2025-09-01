@@ -1,9 +1,9 @@
 import {Component, computed, effect, inject, signal} from '@angular/core';
 import {Router, RouterOutlet} from '@angular/router';
-import {SidebarComponent, SideNavItem, SideUser, TopbarAction} from './features/sidebar/sidebar.component';
-import {Crumb, TopbarComponent} from './topbar/topbar.component';
 import {AuthService} from './core/auth.service';
 import {Role} from '@shared/models';
+import {Crumb, TopbarComponent} from '@shared/topbar/topbar.component';
+import {SidebarComponent, SideNavItem, SideUser, TopbarAction} from '@shared/sidebar/sidebar.component';
 
 type SideItemId = 'home' | 'items' | 'reports' | string;
 type TopActionId = 'new' | 'export' | string;
