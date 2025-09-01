@@ -1,0 +1,22 @@
+<div class="p-6 container">
+  <h2 class="text-xl font-bold mb-4">Items</h2>
+  <div class="mb-4">
+    <input class="border p-2" [(ngModel)]="name" placeholder="Nome item">
+    <button class="border p-2" (click)="create()">Crea</button>
+    @if (err) {
+      <p style="color:#c00;">{{err}}</p>
+    }
+  </div>
+  <table class="table">
+    <tr><th>ID</th><th>Nome</th><th>Creato</th><th></th></tr>
+    @for (d of data(); track d.id) {
+
+    <tr>
+      <td>{{d.id}}</td>
+      <td>{{d.name}}</td>
+      <td>{{d.created_at}}</td>
+      <td><button class="border p-2" (click)="del(d)">Elimina</button></td>
+    </tr>
+    }
+  </table>
+</div>

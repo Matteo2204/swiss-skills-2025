@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "CommonJS",
+    "outDir": "dist",
+    "rootDir": "electron",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "moduleResolution": "Node",
+    "types": ["node"]
+  },
+  "include": ["electron/**/*.ts"]
+}

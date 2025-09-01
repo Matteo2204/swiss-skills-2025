@@ -1,0 +1,6 @@
+<div class="p-6 container">
+  <h2 class="text-xl font-bold mb-2">Dashboard</h2>
+  <p class="mb-2">Ruolo: {{ role() || '-' }}</p>
+  <button class="border p-2" (click)="logout()">Logout</button>
+  <a class="border p-2" [routerLink]="['/items']" style="margin-left:.5rem;">Vai a Items</a>
+</div>

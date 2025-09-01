@@ -1,0 +1,49 @@
+@if (isLoggedIn()) {
+  <div class="d-flex" style="height:100vh;">
+    <div class="d-flex p-0 container-fluid flex-column">
+            <app-topbar
+              [title]="'Skill09App'"
+              [logo]="'assets/logo.png'"
+              [items]="items()"
+              [user]="userVm()"
+              (itemClick)="onSideItem($event)"
+              (action)="onTopAction($event)"
+              (signOut)="onLogout()">
+            </app-topbar>
+
+            <div class="flex-grow-1 d-flex flex-column">
+              <main class="p-3 overflow-auto">
+                <router-outlet/>
+              </main>
+            </div>
+          </div>
+  </div>
+<!--  <div class="d-flex" style="height:100vh;">-->
+<!--    <div class="d-flex" style="height:100vh;">-->
+<!--      <app-sidebar-->
+<!--        [title]="'Skill09App'"-->
+<!--        [logo]="'assets/logo.png'"-->
+<!--        [items]="items()"-->
+<!--        [user]="userVm()"-->
+<!--        [collapsed]="isCollapsed()"-->
+<!--        (collapseChange)="onSidebarCollapsed($event)"-->
+<!--        (itemClick)="onSideItem($event)"-->
+<!--        (action)="onTopAction($event)"-->
+<!--        (signOut)="onLogout()">-->
+<!--      </app-sidebar>-->
+
+<!--      <div class="flex-grow-1 d-flex flex-column">-->
+<!--        <main class="p-3 overflow-auto">-->
+<!--          <router-outlet />-->
+<!--        </main>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+} @else {
+  <div class="d-flex flex-column align-items-center justify-content-center" style="height:100vh;">
+    <h1 class="mb-3">Skill09App</h1>
+    <div class="w-100" style="max-width:480px;">
+      <router-outlet/>
+    </div>
+  </div>
+}

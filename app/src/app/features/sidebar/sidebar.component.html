@@ -1,0 +1,80 @@
+<!-- Header -->
+<div class="p-3 d-flex align-items-center gap-2 border-bottom">
+  @if (logo() && !isCollapsed()) { <img [ngSrc]="logo()!" width="24" height="24" alt="" /> }
+  @if (!isCollapsed()) {
+    <strong class="flex-grow-1 text-truncate">{{ title() }}</strong>
+  }
+  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="toggle()">
+    <i class="bi"
+       [class.bi-chevron-left]="!isCollapsed()"
+       [class.bi-chevron-right]="isCollapsed()"
+       aria-hidden="true"></i>
+  </button>
+</div>
+
+<!-- Body (sempre visibile: in collapse nascondiamo SOLO i testi) -->
+<div class="p-3 overflow-auto">
+
+  <!-- Nav Items -->
+  <nav class="d-flex flex-column gap-2">
+    @for (it of items(); track it.id) {
+      <a
+        class="btn d-flex align-items-center justify-content-between"
+        [class.btn-primary]="(rla.isActive && !!it.route) || (!it.route && selectedId() === it.id)"
+        [class.btn-outline-primary]="!((rla.isActive && !!it.route) || (!it.route && selectedId() === it.id))"
+        [class.disabled]="!!it.disabled"
+        [routerLink]="it.route ?? null"
+        [routerLinkActiveOptions]="{ exact: exactFor(it.route ?? null) }"
+        routerLinkActive="active" #rla="routerLinkActive"
+        (click)="onItemClick(it)">
+
+        <span class="d-flex align-items-center gap-2">
+          @if (it.icon) { <i class="{{ it.icon }}" aria-hidden="true"></i> }
+          @if (!isCollapsed()) { <span>{{ it.label }}</span> }
+        </span>
+
+        @if (!isCollapsed() && it.badge !== undefined) {
+          <span class="badge text-bg-light">{{ it.badge }}</span>
+        }
+      </a>
+    }
+  </nav>
+
+  @if (actions()?.length) {
+    <hr class="my-3" />
+    <div class="d-flex gap-2 flex-wrap">
+      @for (a of actions()!; track a.id) {
+        <button type="button"
+                class="btn"
+                [class.btn-primary]="a.variant === 'primary'"
+                [class.btn-outline-secondary]="a.variant === 'outline-secondary'"
+                [class.btn-secondary]="!a.variant || a.variant === 'secondary'"
+                [disabled]="!!a.disabled"
+                (click)="onActionClick(a.id)">
+          @if (a.icon) { <i class="{{ a.icon }} me-1" aria-hidden="true"></i> }
+          @if (!isCollapsed()) { {{ a.label }} }
+        </button>
+      }
+    </div>
+  }
+
+  @if (user()) {
+    <hr class="my-3" />
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-person-circle" style="font-size: 28px;" aria-hidden="true"></i>
+
+        @if (!isCollapsed()) {
+          <div>
+            <div class="fw-semibold">{{ user()!.name }}</div>
+            @if (user()!.role) { <small class="text-muted">{{ user()!.role }}</small> }
+          </div>
+        }
+      </div>
+
+      @if (!isCollapsed()) {
+        <button type="button" class="btn btn-outline-danger btn-sm" (click)="onSignOut()">Sign out</button>
+      }
+    </div>
+  }
+</div>
