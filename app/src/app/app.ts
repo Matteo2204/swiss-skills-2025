@@ -49,11 +49,13 @@ export class App {
   ]);
 
   constructor() {
-    effect(() => {
-      if (!this.auth.isLoggedIn()) {
-        const url = this.router.url;
-        if (!url.startsWith('/login')) void this.router.navigateByUrl('/login');
-      }
+    this.auth.ready().then(() => {
+      effect(() => {
+        if (!this.auth.isLoggedIn()) {
+          const url = this.router.url;
+          if (!url.startsWith('/login')) void this.router.navigateByUrl('/login');
+        }
+      });
     });
   }
 

@@ -15,6 +15,10 @@ import { AuthService } from '../../../../core/auth.service';
       <form (ngSubmit)="submit()" class="d-flex flex-column gap-2">
         <input class="form-control" [(ngModel)]="username" name="u" placeholder="Username" required>
         <input class="form-control" [(ngModel)]="password" name="p" placeholder="Password" type="password" required>
+        <label class="d-flex align-items-center gap-2 text-muted" style="font-size: .95rem;">
+          <input type="checkbox" [(ngModel)]="remember" name="r">
+          Ricordami su questo dispositivo
+        </label>
         <button class="btn btn-primary mt-2" type="submit">Sign in</button>
       </form>
 
@@ -33,6 +37,7 @@ import { AuthService } from '../../../../core/auth.service';
 export class LoginComponent {
   username = '';
   password = '';
+  remember = false;
   error = signal(false);
 
   private readonly auth = inject(AuthService);
@@ -40,7 +45,7 @@ export class LoginComponent {
 
   async submit() {
     this.error.set(false);
-    const ok = await this.auth.login(this.username, this.password);
+    const ok = await this.auth.login(this.username, this.password, this.remember);
     if (ok) this.router.navigateByUrl('/');
     else this.error.set(true);
   }

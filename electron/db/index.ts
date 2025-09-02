@@ -4,10 +4,12 @@ import path from 'path';
 import type { Pool, PoolOptions, ResultSetHeader } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
 import { hashPassword } from './utils';
+import { ensureLocalMysqlIfNeeded } from './mysql-server';
+import { getPortableDataDir } from './paths';
 
 type Row = Record<string, any>;
 
-// Minimal wrapper to mimic the SQLite-style API used across the codebase
+// Minimal DB wrapper to keep existing call sites unchanged
 type Prepared = {
   get: (...args: any[]) => Promise<Row | undefined>;
   all: (...args: any[]) => Promise<Row[]>;
@@ -81,7 +83,14 @@ function buildWrapper(p: Pool): DBClass {
       const stmts = splitSqlStatements(sql);
       for (const s of stmts) {
         if (!s) continue;
-        await p.query(s);
+        try {
+          await p.query(s);
+        } catch (e: any) {
+          const code = e?.code ?? e?.errno;
+          // Ignore "duplicate index" if schema applied multiple times
+          if (code === 'ER_DUP_KEYNAME' || code === 1061) continue;
+          throw e;
+        }
       }
     },
   };
@@ -93,12 +102,22 @@ export function getDB(): DBClass {
 }
 
 export async function initDB() {
-  // Read connection details from env
-  const host = env('MYSQL_HOST', 'localhost');
-  const port = Number(env('MYSQL_PORT', '3306'));
-  const user = env('MYSQL_USER');
-  const password = env('MYSQL_PASSWORD', '');
-  const database = env('MYSQL_DATABASE');
+  // If no external env present, attempt to start local sidecar
+  let localInfo: { host: string; port: number; user: string; password: string; database: string; socketPath?: string } | null = null;
+  try {
+    const baseDir = getPortableDataDir();
+    localInfo = await ensureLocalMysqlIfNeeded(baseDir);
+  } catch (e) {
+    // If sidecar fails and external env is missing, we will error below via env()
+    log('Sidecar not used or failed:', (e as Error)?.message);
+  }
+
+  // Read connection details from env or from sidecar
+  const host = localInfo?.host ?? env('MYSQL_HOST', 'localhost');
+  const port = localInfo?.port ?? Number(env('MYSQL_PORT', '3306'));
+  const user = localInfo?.user ?? env('MYSQL_USER');
+  const password = localInfo?.password ?? env('MYSQL_PASSWORD', '');
+  const database = localInfo?.database ?? env('MYSQL_DATABASE');
 
   const baseOpts: PoolOptions = {
     host,
@@ -110,17 +129,24 @@ export async function initDB() {
     queueLimit: 0,
     multipleStatements: false,
   };
+  if (localInfo?.socketPath) {
+    // Prefer Unix socket on macOS/Linux to ensure root@localhost works during bootstrap
+    (baseOpts as any).socketPath = localInfo.socketPath;
+  }
 
-  // Create a temporary pool without specifying database to ensure DB exists
-  const rootPool = await mysql.createPool(baseOpts);
-  try {
-    await ensureDatabaseExists(rootPool, database);
-  } finally {
-    await rootPool.end();
+  // If using external env, ensure database exists with provided user
+  if (!localInfo) {
+    const rootPool = await mysql.createPool(baseOpts);
+    try {
+      await ensureDatabaseExists(rootPool, database);
+    } finally {
+      await rootPool.end();
+    }
   }
 
   // Create pool bound to the application database
-  pool = await mysql.createPool({ ...baseOpts, database });
+  const finalOpts: PoolOptions = { ...baseOpts, database };
+  pool = await mysql.createPool(finalOpts);
   db = buildWrapper(pool);
 
   // Apply schema

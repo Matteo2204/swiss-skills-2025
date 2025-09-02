@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import path from "path";
 import { initDB } from "./db";
+import { stopLocalMysql } from "./db/mysql-server";
 import { registerAuthHandlers } from "./ipc/auth"; // se hai anche altri handler, importali e chiamali
 import { createExpressServer } from "./server";
 import type { Server } from "http";
@@ -96,5 +97,8 @@ async function waitForDevServer(url: string, timeoutMs = 30000, intervalMs = 250
 }
 
 app.whenReady().then(createWindow);
-app.on("before-quit", () => { try { expressServer?.close(); } catch {} });
+app.on("before-quit", async () => {
+    try { expressServer?.close(); } catch {}
+    try { await stopLocalMysql(); } catch (e) { console.warn('[main] MySQL stop failed', (e as Error)?.message); }
+});
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });

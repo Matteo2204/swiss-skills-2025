@@ -25,6 +25,17 @@ CREATE TABLE IF NOT EXISTS users (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- persistent sessions (so tokens survive app restarts)
+CREATE TABLE IF NOT EXISTS sessions (
+  token VARCHAR(191) NOT NULL PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  role ENUM('ADMIN','OPERATOR') NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NULL DEFAULT NULL,
+  CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE INDEX idx_sessions_user ON sessions(user_id);
+
 -- items table
 CREATE TABLE IF NOT EXISTS items (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -33,5 +44,4 @@ CREATE TABLE IF NOT EXISTS items (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE INDEX IF NOT EXISTS idx_items_created ON items(created_at);
-
+CREATE INDEX idx_items_created ON items(created_at);

@@ -1,4 +1,4 @@
-# Skill09App — Angular + Electron + SQLite (Express-served UI)
+# Skill09App — Angular + Electron + MySQL (Express-served UI)
 
 Desktop app scaffold used for **SwissSkills – Skill 09 (Informatics)**.  
 Tech stack:
@@ -44,11 +44,10 @@ typeof window.api === "object"   // should be true (preload bridge)
     "build:angular": "npm --prefix app run build",
     "build:electron": "tsc -p tsconfig.json",
     "copy:ui": "mkdir -p dist/ui && cpx \"app/dist/app/browser/**/*\" dist/ui",
-    "copy:schema": "mkdir -p dist/db && cpx \"electron/db/schema.sql\" dist/db",
+    "copy:schema": "mkdir -p dist/db && cpx \"electron/db/schema.mysql.sql\" dist/db",
 
     "start": "electron .",
 
-    "deps:rebuild": "electron-rebuild -f -w better-sqlite3 --runtime=electron --version=31.7.7",
     "postinstall": "electron-builder install-app-deps",
 
     "pack:mac": "electron-builder --projectDir . --mac dmg",
@@ -61,7 +60,7 @@ typeof window.api === "object"   // should be true (preload bridge)
 - `build` → Angular production build → copies UI to `dist/ui` → compiles Electron TS → copies DB schema.
 - `start` → runs Electron against the **built** app (serves UI with Express).
 - `pack:*` → packages the app (outputs in `release/`).
-- `deps:rebuild` → rebuild native modules (use if you change Electron version).
+
 
 ---
 
@@ -71,6 +70,11 @@ typeof window.api === "object"   // should be true (preload bridge)
 - Angular: `http://localhost:4200/`
 - Electron loads that URL.
 - Database created in a project-local portable folder (see **Data persistence**).
+
+Per l'avvio in dev senza variabili `MYSQL_*`, assicurati di avere i binari:
+- `resources/mysql/<piattaforma>/bin/mysqld[.exe]` nel progetto, oppure
+- imposta `MYSQL_BUNDLE_URL` (+ opzionale `MYSQL_BUNDLE_SHA256`) per il download al primo avvio, oppure
+- usa un server MySQL esterno impostando `MYSQL_*`.
 
 Start:
 ```bash
@@ -117,9 +121,10 @@ npm start
 │  ├─ preload.ts             # Secure bridge: window.api.invoke(...)
 │  ├─ server.ts              # Express 5 server (serves UI in built/packaged)
 │  ├─ db/
-│  │  ├─ index.ts            # SQLite init, PRAGMA, migrations (schema.sql)
+│  │  ├─ index.ts            # MySQL adapter + schema/seed + sidecar bootstrap
+│  │  ├─ mysql-server.ts     # Portable MySQL sidecar (init/start/stop, logs, download fallback)
 │  │  ├─ utils.ts            # Argon2 helpers, etc.
-│  │  └─ schema.sql          # DDL (users table, items, ...)
+│  │  └─ schema.mysql.sql    # DDL (users table, items, ...)
 │  └─ ipc/
 │     └─ auth.ts             # IPC handlers: 'auth:login', 'auth:logout'
 ├─ dist/                     # Compiled Electron + copied UI
@@ -172,11 +177,33 @@ Handlers are registered early in `main.ts` **before** any `loadURL()`.
 ## Database & data persistence
 
 - Engine: **MySQL**, driver **mysql2**.
-- Schema is applied from `electron/db/schema.mysql.sql` on first launch.
-- Configure via env vars (`MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`).
-- Seed users (example):
-    - `admin` / `admin123` (role: ADMIN)
-    - `operator` / `operator123` (role: OPERATOR)
+- Avvio automatico DB locale (sidecar) se non sono presenti variabili `MYSQL_*`.
+- Schema applicato da `electron/db/schema.mysql.sql` al primo avvio.
+- Dati persistenti in `getPortableDataDir()/db/mysql/datadir` (portabile accanto all'eseguibile).
+- Utenti seed (se DB vuoto):
+    - `admin` / `admin123` (ruolo: ADMIN)
+    - `operator` / `operator123` (ruolo: OPERATOR)
+
+### MySQL bundled (consigliato per macOS e Windows)
+
+Per avere un'app completamente portabile (doppio click e funziona offline), includi MySQL dentro la cartella `resources` del progetto prima del packaging o dell'esecuzione in dev.
+
+Struttura richiesta:
+- `resources/mysql/darwin-arm64/bin/mysqld` (macOS Apple Silicon)
+- `resources/mysql/darwin-x64/bin/mysqld` (macOS Intel)
+- `resources/mysql/win32-x64/bin/mysqld.exe` (Windows x64)
+
+Cosa copiare:
+- l'intero contenuto dell'archivio ufficiale di MySQL Community Server (bin, lib, share, plugins, ecc.).
+
+Dove scaricare:
+- Sito ufficiale MySQL Community Server (8.4 LTS consigliato): https://dev.mysql.com/downloads/mysql/
+- macOS: scegli il pacchetto “Generic (tar archive)” per l'architettura corretta.
+- Windows: scegli “ZIP Archive (x86, 64-bit)”.
+
+Note:
+- Su macOS, imposta il bit eseguibile su `mysqld` (`chmod +x`). Per la miglior compatibilità con Gatekeeper, firma i binari inclusi insieme all'app.
+- In packaging, `extraResources` è già configurato per includere `resources/mysql/**` nel bundle.
 
 
 
@@ -208,7 +235,17 @@ Key points in `electron/server.ts`:
   "appId": "com.galassini.skill09",
   "productName": "Skill09App",
   "directories": { "app": ".", "output": "release" },
-  "files": ["dist/**/*"],
+  "files": ["dist/**/*",
+    "electron/db/schema.mysql.sql",
+    "electron/db/migrate.ts",
+    "electron/db/migrations/**/*"],
+  "extraResources": [
+    {
+      "from": "resources/mysql",
+      "to": "resources/mysql",
+      "filter": ["**/*"]
+    }
+  ],
   "asarUnpack": ["**/*.node"],
   "mac": { "target": ["dmg", "zip"] },
   "win": { "target": ["zip"] },
@@ -254,32 +291,15 @@ For quicker testing:
 npx electron-builder --mac zip
 ```
 
-### Database Configuration (MySQL)
+### Configurazione Database (MySQL)
 
-- Set the following environment variables before running the app:
+- Modalità sidecar (predefinita): nessuna variabile richiesta; l'app avvia MySQL locale in automatico se trova `mysqld` in `resources/mysql/<piattaforma>/bin/`.
+- Modalità esterna: imposta queste variabili se vuoi usare un server MySQL già esistente:
   - `MYSQL_HOST` (default `localhost`)
   - `MYSQL_PORT` (default `3306`)
   - `MYSQL_USER`
-  - `MYSQL_PASSWORD` (optional if user has no password)
+  - `MYSQL_PASSWORD`
   - `MYSQL_DATABASE`
-
-- On startup, the app creates the database if missing and applies `electron/db/schema.mysql.sql`.
-
-### Data Migration from SQLite
-
-If you already have local data in `./data/app.db` (SQLite), migrate it with:
-
-```
-MYSQL_HOST=localhost MYSQL_USER=root MYSQL_PASSWORD=secret MYSQL_DATABASE=skill09 npm run db:migrate:data
-```
-
-Optional: set `SQLITE_PATH` to point to a custom `.db` file.
-
-### Native modules mismatch (argon2)
-If you change Electron version:
-```bash
-npm run deps:rebuild
-```
 
 ### “No handler registered for 'auth:login'”
 - Call `registerAuthHandlers()` **before** `loadURL()` in `main.ts`.
