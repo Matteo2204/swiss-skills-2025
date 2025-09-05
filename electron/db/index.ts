@@ -1,108 +1,158 @@
-// electron/db/index.ts
+// electron/db/index.ts (MySQL adapter)
 import fs from 'fs';
 import path from 'path';
-
-// === TIPI: usa i tipi namespaced senza importare il modulo come valore ===
-import type * as BetterSqlite3 from 'better-sqlite3';
-
-// === RUNTIME: otteniamo il costruttore CommonJS ===
-const BetterSqlite3Ctor = require('better-sqlite3') as unknown as {
-    new (file: string, options?: BetterSqlite3.Options): BetterSqlite3.Database;
-};
-
-type DBClass = BetterSqlite3.Database;
-
-import { getPortableDataDir } from './paths';
+import type { Pool, PoolOptions, ResultSetHeader } from 'mysql2/promise';
+import mysql from 'mysql2/promise';
 import { hashPassword } from './utils';
 
+type Row = Record<string, any>;
+
+// Minimal DB wrapper to keep existing call sites unchanged
+type Prepared = {
+  get: (...args: any[]) => Promise<Row | undefined>;
+  all: (...args: any[]) => Promise<Row[]>;
+  run: (...args: any[]) => Promise<{ lastInsertRowid?: number; changes?: number }>;
+};
+
+type DBClass = {
+  prepare: (sql: string) => Prepared;
+  exec: (sql: string) => Promise<void>;
+};
+
+let pool: Pool | null = null;
 let db: DBClass | null = null;
 
 function log(...args: unknown[]) { console.log('[db]', ...args); }
 
-/** Risolve il percorso di schema.sql sia in DEV che in BUILD (outDir = "dist"). */
-function resolveSchemaPath(): string {
-    const here = __dirname;            // es.: dist/db  (in dev è la cartella di build)
-    const cwd  = process.cwd();        // root del progetto o app bundle CWD in packaged
-
-    const candidates = [
-        path.join(here, 'schema.sql'),                  // BUILD: dist/db/schema.sql
-        path.join(cwd, 'electron', 'db', 'schema.sql'), // DEV:   electron/db/schema.sql
-    ];
-
-    console.log(
-        '[db] diagnostics:',
-        '\n  __filename  =', __filename,
-        '\n  __dirname   =', here,
-        '\n  process.cwd =', cwd,
-        '\n  candidates  =\n   -', candidates.join('\n   - ')
-    );
-
-    for (const p of candidates) {
-        const exists = fs.existsSync(p);
-        console.log('[db] check exists:', p, '->', exists ? 'YES' : 'NO');
-        if (exists) return p;
-    }
-    throw new Error(
-        'schema.sql non trovato:\n' +
-        candidates.map(c => ' - ' + c).join('\n')
-    );
+function env(name: string, fallback?: string): string {
+  const v = process.env[name];
+  if (v == null || v === '') {
+    if (fallback !== undefined) return fallback;
+    throw new Error(`Missing env ${name}`);
+  }
+  return v;
 }
 
-function cleanupWalShm(dbFile: string) {
-    for (const ext of ['', '-wal', '-shm']) {
-        const f = `${dbFile}${ext}`;
-        if (fs.existsSync(f)) {
-            try { fs.unlinkSync(f); log('removed', f); }
-            catch (e) { console.warn('[db] unlink failed', f, e); }
+function resolveMysqlSchemaPath(): string {
+  const here = __dirname;
+  const cwd = process.cwd();
+  const candidates = [
+    path.join(here, 'schema.mysql.sql'),
+    path.join(cwd, 'electron', 'db', 'schema.mysql.sql'),
+  ];
+  for (const p of candidates) if (fs.existsSync(p)) return p;
+  throw new Error('schema.mysql.sql not found in expected locations');
+}
+
+async function ensureDatabaseExists(rootPool: Pool, dbName: string) {
+  await rootPool.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`);
+}
+
+function splitSqlStatements(sql: string): string[] {
+  // naive splitter safe enough for our simple schema files
+  return sql
+    .split(/;\s*\n/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function buildWrapper(p: Pool): DBClass {
+  return {
+    prepare(sql: string): Prepared {
+      return {
+        async get(...args: any[]) {
+          const [rows]: any = await p.execute(sql, args);
+          return Array.isArray(rows) ? (rows[0] as Row | undefined) : undefined;
+        },
+        async all(...args: any[]) {
+          const [rows]: any = await p.execute(sql, args);
+          return Array.isArray(rows) ? (rows as Row[]) : [];
+        },
+        async run(...args: any[]) {
+          const [res] = await p.execute<ResultSetHeader>(sql, args);
+          return {
+            lastInsertRowid: (res as ResultSetHeader).insertId ?? undefined,
+            changes: (res as ResultSetHeader).affectedRows ?? undefined,
+          };
+        },
+      };
+    },
+    async exec(sql: string) {
+      const stmts = splitSqlStatements(sql);
+      for (const s of stmts) {
+        if (!s) continue;
+        try {
+          await p.query(s);
+        } catch (e: any) {
+          const code = e?.code ?? e?.errno;
+          // Ignore "duplicate index" if schema applied multiple times
+          // or duplicate column when applying ALTERs
+          if (code === 'ER_DUP_KEYNAME' || code === 1061 || code === 'ER_DUP_FIELDNAME' || code === 1060) continue;
+          throw e;
         }
-    }
+      }
+    },
+  };
 }
 
 export function getDB(): DBClass {
-    if (!db) throw new Error('DB not initialized. Call initDB() first.');
-    return db;
+  if (!db) throw new Error('DB not initialized. Call initDB() first.');
+  return db;
 }
 
 export async function initDB() {
-    const DB_DIR  = getPortableDataDir(); // ./data (dev) oppure Contents/MacOS/data (packaged)
-    try { fs.mkdirSync(DB_DIR, { recursive: true }); } catch {}
-    const DB_FILE = path.join(DB_DIR, 'app.db');
-    const firstCreate = !fs.existsSync(DB_FILE);
+  // External MySQL only: env vars if provided, else VM/dev defaults
+  const host = env('MYSQL_HOST', 'localhost');
+  const port = Number(env('MYSQL_PORT', '3306'));
+  const user = env('MYSQL_USER', 'root');
+  const password = env('MYSQL_PASSWORD', 'ictskills');
+  const database = env('MYSQL_DATABASE', 'ictskills');
 
-    // 1) Apri il DB
-    db = new BetterSqlite3Ctor(DB_FILE);
+  const baseOpts: PoolOptions = {
+    host, port, user, password,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    multipleStatements: false,
+  };
 
-    // 2) PRAGMA con retry se troviamo WAL/SHM corrotti (SQLITE_IOERR)
-    try {
-        db.pragma('journal_mode = WAL');
-    } catch (e: any) {
-        const msg = String(e?.message ?? e);
-        if (msg.includes('SQLITE_IOERR')) {
-            log('IOERR on PRAGMA WAL, attempting cleanup & reopen…');
-            try { (db as any).close?.(); } catch {}
-            cleanupWalShm(DB_FILE);
-            db = new BetterSqlite3Ctor(DB_FILE);
-            db.pragma('journal_mode = WAL'); // retry
-        } else {
-            throw e;
-        }
+  // Ensure database exists (best effort)
+  try {
+    const rootPool = await mysql.createPool(baseOpts);
+    try { await ensureDatabaseExists(rootPool, database); } finally { await rootPool.end(); }
+  } catch {}
+
+  pool = await mysql.createPool({ ...baseOpts, database });
+  db = buildWrapper(pool);
+
+  // Apply schema
+  const schemaPath = resolveMysqlSchemaPath();
+  log('using schema:', schemaPath);
+  const ddl = fs.readFileSync(schemaPath, 'utf8');
+  await db.exec(ddl);
+
+  // Migrate: ensure 'remember' column exists in sessions for older DBs
+  try {
+    const [rows]: any = await pool.query(
+      `SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'sessions' AND COLUMN_NAME = 'remember'`,
+      [database]
+    );
+    const exists = Array.isArray(rows) && rows.length > 0;
+    if (!exists) {
+      await pool.query(`ALTER TABLE sessions ADD COLUMN remember TINYINT(1) NOT NULL DEFAULT 0`);
+      log("migrated: added sessions.remember");
     }
+  } catch (e) {
+    log('migration check failed (non-fatal):', (e as Error)?.message);
+  }
 
-    db.pragma('synchronous = NORMAL');
-    db.pragma('foreign_keys = ON');
-
-    // 3) DDL (baseline v1)
-    const SCHEMA = resolveSchemaPath();
-    log('using schema:', SCHEMA);
-    const ddl = fs.readFileSync(SCHEMA, 'utf8');
-    db.exec(ddl);
-
-    // 4) Seed minimi
-    const row = db.prepare('SELECT COUNT(*) c FROM users').get() as { c: number } | undefined;
-    if (firstCreate || !row || row.c === 0) {
-        const ins = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?,?,?)');
-        ins.run('admin',   await hashPassword('admin123'),   'ADMIN');
-        ins.run('operator',await hashPassword('operator123'),'OPERATOR');
-        log('seeded users: admin/admin123, operator/operator123');
-    }
+  // Minimal seed: ensure at least admin/operator users exist
+  const row = (await db.prepare('SELECT COUNT(*) c FROM users').get()) as { c: number } | undefined;
+  const count = row ? Number((row as any).c ?? (row as any)['COUNT(*)'] ?? 0) : 0;
+  if (count === 0) {
+    const ins = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?,?,?)');
+    await ins.run('admin', await hashPassword('admin123'), 'ADMIN');
+    await ins.run('operator', await hashPassword('operator123'), 'OPERATOR');
+    log('seeded users: admin/admin123, operator/operator123');
+  }
 }

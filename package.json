@@ -4,7 +4,7 @@
   "private": true,
   "main": "dist/main.js",
   "author": "Matteo Galassini",
-  "description": "Skill09 App - Angular + Electron + SQLite",
+  "description": "Skill09 App - Angular + Electron + MySQL",
   "scripts": {
     "dev": "concurrently -k -n ANG,TSC,ELEC \"npm run dev:angular\" \"npm run build:electron:watch\" \"npm run run:electron\"",
     "dev:angular": "npm --prefix app run start -- --port 4200 --open=false",
@@ -15,18 +15,16 @@
     "build:angular": "npm --prefix app run build",
     "build:electron": "tsc -p tsconfig.json",
     "copy:ui": "mkdir -p dist/ui && cpx \"app/dist/app/browser/**/*\" dist/ui",
-    "copy:schema": "mkdir -p dist/db && cpx \"electron/db/schema.sql\" dist/db",
+    "copy:schema": "mkdir -p dist/db && cpx \"electron/db/schema.mysql.sql\" dist/db",
 
     "start": "electron .",
 
-    "deps:rebuild": "electron-rebuild -f -w better-sqlite3 --runtime=electron --version=31.7.7",
     "postinstall": "electron-builder install-app-deps",
 
     "pack:mac": "electron-builder --projectDir . --mac dmg",
     "pack:win": "electron-builder --projectDir . --win zip --x64"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.0",
     "@types/node": "^20.12.12",
     "concurrently": "^8.2.2",
@@ -40,7 +38,7 @@
   },
   "dependencies": {
     "argon2": "^0.41.1",
-    "better-sqlite3": "^12.2.0",
+    "mysql2": "^3.11.3",
     "express": "^5.1.0"
   },
   "build": {
@@ -48,10 +46,11 @@
     "productName": "Skill09App",
     "directories": { "app": ".", "output": "release" },
     "files": ["dist/**/*",
-      "electron/db/schema.sql",
+      "electron/db/schema.mysql.sql",
       "electron/db/migrate.ts",
       "electron/db/migrations/**/*"],
     "asarUnpack": ["**/*.node"],
+    
     "mac": { "target": ["dmg","zip"], "category": "public.app-category.utilities" },
     "win": { "target": ["zip"] },
     "dmg": {

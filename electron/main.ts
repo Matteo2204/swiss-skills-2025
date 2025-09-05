@@ -96,5 +96,5 @@ async function waitForDevServer(url: string, timeoutMs = 30000, intervalMs = 250
 }
 
 app.whenReady().then(createWindow);
-app.on("before-quit", () => { try { expressServer?.close(); } catch {} });
+app.on("before-quit", async () => { try { expressServer?.close(); } catch {} });
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });

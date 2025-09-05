@@ -2,7 +2,6 @@
 import { computed, Injectable, signal, inject } from '@angular/core';
 import { LoginResult, Role } from '../shared/models';
 import { IpcService } from './ipc.service';
-import { environment } from '../../environments/environment';
 
 export interface User {
   id: number;
@@ -24,23 +23,44 @@ export class AuthService {
 
   private readonly ipc = inject(IpcService);
 
+  private _ready: Promise<void>;
+
   constructor() {
+    this._ready = this.init();
+  }
+
+  private async init() {
     // 1) ripristina sessione da localStorage
     this.restore();
-
-    // 2) auto-login solo in dev (se non già loggato)
-    if ((environment as any)?.devAutoLogin && !this.isLoggedIn()) {
-      this.setSession({ id: 0, username: 'dev-admin', role: Role.ADMIN }, 'DEV');
+    // 1b) se c'è un token, validalo con il main; se non valido, pulisci
+    if (this._token()) {
+      try {
+        const res: any = await this.ipc.invoke('auth:me', { token: this._token() });
+        if (!res?.ok || !res.user) {
+          this._token.set(null); this._user.set(null); localStorage.removeItem(this.STORAGE_KEY);
+        }
+      } catch {
+        this._token.set(null); this._user.set(null); localStorage.removeItem(this.STORAGE_KEY);
+      }
+    }
+    // 1c) se non c'è token, prova a ripristinare l'ultima sessione ricordata (persistente nel DB)
+    if (!this._token()) {
+      try {
+        const res: any = await this.ipc.invoke('auth:last-remembered');
+        if (res?.ok && res.user && res.token) {
+          this.setSession(res.user as User, res.token as string, true);
+        }
+      } catch { /* ignore */ }
     }
   }
 
   // --- API ---
-  async login(username: string, password: string): Promise<boolean> {
-    const res = await this.ipc.invoke<LoginResult>('auth:login', { username, password });
+  async login(username: string, password: string, remember = false): Promise<boolean> {
+    const res = await this.ipc.invoke<LoginResult>('auth:login', { username, password, remember });
     if (res?.ok && res.user) {
       // se il backend non fornisce token, usiamo uno stub per la sessione
       const token = res.token ?? 'SESSION';
-      this.setSession(res.user as User, token);
+      this.setSession(res.user as User, token, remember);
       return true;
     }
     return false;
@@ -48,7 +68,7 @@ export class AuthService {
 
   async logout(): Promise<void> {
     const t = this._token();
-    try { if (t) await this.ipc.invoke('auth:logout', t); } catch { /* ignore */ }
+    try { if (t) await this.ipc.invoke('auth:logout', { token: t }); } catch { /* ignore */ }
     this._token.set(null);
     this._user.set(null);
     localStorage.removeItem(this.STORAGE_KEY);
@@ -68,18 +88,22 @@ export class AuthService {
   }
 
   // --- internals ---
-  private setSession(user: User, token: string): void {
+  private setSession(user: User, token: string, remember = false): void {
     this._user.set(user);
     this._token.set(token);
-    this.persist();
+    this.persist(remember);
   }
 
-  private persist(): void {
+  private persist(remember: boolean): void {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
-        token: this._token(),
-        user:  this._user(),
-      }));
+      if (remember) {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
+          token: this._token(),
+          user:  this._user(),
+        }));
+      } else {
+        localStorage.removeItem(this.STORAGE_KEY);
+      }
     } catch { /* ignore */ }
   }
 
@@ -94,4 +118,6 @@ export class AuthService {
       localStorage.removeItem(this.STORAGE_KEY);
     }
   }
+
+  ready(): Promise<void> { return this._ready; }
 }

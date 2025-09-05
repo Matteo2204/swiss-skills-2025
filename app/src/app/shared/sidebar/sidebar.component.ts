@@ -31,8 +31,9 @@ export interface TopbarAction {
   imports: [RouterLink, RouterLinkActive, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'd-flex flex-column h-100 border-end bg-white',
-    '[style.width.px]': 'isCollapsed() ? 72 : 280',
+    class: 'd-flex flex-column h-100 border-end app-sidebar',
+    '[style.width.px]': 'isCollapsed() ? 78 : 280',
+    '[class.is-collapsed]': 'isCollapsed()',
     style: 'transition: width 160ms ease; flex: 0 0 auto;'
   },
   templateUrl: './sidebar.component.html',

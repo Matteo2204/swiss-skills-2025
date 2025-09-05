@@ -1,11 +1,11 @@
-# Skill09App — Angular + Electron + SQLite (Express-served UI)
+# Skill09App — Angular + Electron + MySQL (Express-served UI)
 
 Desktop app scaffold used for **SwissSkills – Skill 09 (Informatics)**.  
 Tech stack:
 
 - **Frontend**: Angular 20
 - **Desktop wrapper**: Electron 31
-- **Database**: SQLite (via `better-sqlite3`)
+- **Database**: MySQL esterno (via `mysql2`)
 - **Auth**: Argon2 password hashing + in-memory sessions
 - **Local server**: Express 5 (serves the Angular build in packaged mode)
 - **Packaging**: electron-builder (DMG on macOS, ZIP on Windows)
@@ -44,11 +44,10 @@ typeof window.api === "object"   // should be true (preload bridge)
     "build:angular": "npm --prefix app run build",
     "build:electron": "tsc -p tsconfig.json",
     "copy:ui": "mkdir -p dist/ui && cpx \"app/dist/app/browser/**/*\" dist/ui",
-    "copy:schema": "mkdir -p dist/db && cpx \"electron/db/schema.sql\" dist/db",
+    "copy:schema": "mkdir -p dist/db && cpx \"electron/db/schema.mysql.sql\" dist/db",
 
     "start": "electron .",
 
-    "deps:rebuild": "electron-rebuild -f -w better-sqlite3 --runtime=electron --version=31.7.7",
     "postinstall": "electron-builder install-app-deps",
 
     "pack:mac": "electron-builder --projectDir . --mac dmg",
@@ -61,7 +60,7 @@ typeof window.api === "object"   // should be true (preload bridge)
 - `build` → Angular production build → copies UI to `dist/ui` → compiles Electron TS → copies DB schema.
 - `start` → runs Electron against the **built** app (serves UI with Express).
 - `pack:*` → packages the app (outputs in `release/`).
-- `deps:rebuild` → rebuild native modules (use if you change Electron version).
+
 
 ---
 
@@ -70,7 +69,7 @@ typeof window.api === "object"   // should be true (preload bridge)
 ### Dev (HMR)
 - Angular: `http://localhost:4200/`
 - Electron loads that URL.
-- Database created in a project-local portable folder (see **Data persistence**).
+- Database: usa MySQL esterno (defaults VM/dev: `localhost:3306`, `root/ictskills`, DB `ictskills`).
 
 Start:
 ```bash
@@ -117,9 +116,9 @@ npm start
 │  ├─ preload.ts             # Secure bridge: window.api.invoke(...)
 │  ├─ server.ts              # Express 5 server (serves UI in built/packaged)
 │  ├─ db/
-│  │  ├─ index.ts            # SQLite init, PRAGMA, migrations (schema.sql)
+│  │  ├─ index.ts            # MySQL adapter + schema/seed
 │  │  ├─ utils.ts            # Argon2 helpers, etc.
-│  │  └─ schema.sql          # DDL (users table, items, ...)
+│  │  └─ schema.mysql.sql    # DDL (users table, items, ...)
 │  └─ ipc/
 │     └─ auth.ts             # IPC handlers: 'auth:login', 'auth:logout'
 ├─ dist/                     # Compiled Electron + copied UI
@@ -171,22 +170,20 @@ Handlers are registered early in `main.ts` **before** any `loadURL()`.
 
 ## Database & data persistence
 
-- Engine: **SQLite**, driver **better-sqlite3**.
-- Schema is applied from `electron/db/schema.sql` on first launch.
-- Seed users (example):
-    - `admin` / `admin123` (role: ADMIN)
-    - `operator` / `operator123` (role: OPERATOR)
+- Engine: **MySQL**, driver **mysql2**.
+- Ci si collega sempre ad un MySQL esterno:
+  - Env vars (se presenti): `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
+  - Default (VM e dev): `localhost:3306`, user `root`, password `ictskills`, database `ictskills`.
+- Al primo avvio applica lo schema `electron/db/schema.mysql.sql` e inserisce utenti seed se assenti:
+  - `admin/admin123` (ADMIN), `operator/operator123` (OPERATOR)
 
-**Portable DB path** (created automatically):
+### Configurazione rapida (dev/VM)
 
-- **Dev**: a `data/` folder next to your running binary (project root during dev).
-- **Packaged (macOS)**:  
-  `Skill09App.app/Contents/MacOS/data/app.db`  
-  (you’ll see a log like: `Portable data directory: .../Contents/MacOS/data`)
-- **Packaged (Windows)**:  
-  next to `Skill09App.exe` → `.\data\app.db`
+- Senza env vars, l'app tenta automaticamente `localhost:3306` con `root/ictskills` sul DB `ictskills` (default VM SwissSkills).
+- Per ambienti diversi, esporta:
+  - `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
 
-> Change it in your `getPortableDataDir()` implementation if you prefer `app.getPath('userData')`.
+
 
 ---
 
@@ -216,7 +213,10 @@ Key points in `electron/server.ts`:
   "appId": "com.galassini.skill09",
   "productName": "Skill09App",
   "directories": { "app": ".", "output": "release" },
-  "files": ["dist/**/*"],
+  "files": ["dist/**/*",
+    "electron/db/schema.mysql.sql",
+    "electron/db/migrate.ts",
+    "electron/db/migrations/**/*"],
   "asarUnpack": ["**/*.node"],
   "mac": { "target": ["dmg", "zip"] },
   "win": { "target": ["zip"] },
@@ -262,11 +262,15 @@ For quicker testing:
 npx electron-builder --mac zip
 ```
 
-### Native modules mismatch (argon2 / better-sqlite3)
-If you change Electron version:
-```bash
-npm run deps:rebuild
-```
+### Configurazione Database (MySQL)
+
+- Modalità sidecar (predefinita): nessuna variabile richiesta; l'app avvia MySQL locale in automatico se trova `mysqld` in `resources/mysql/<piattaforma>/bin/`.
+- Modalità esterna: imposta queste variabili se vuoi usare un server MySQL già esistente:
+  - `MYSQL_HOST` (default `localhost`)
+  - `MYSQL_PORT` (default `3306`)
+  - `MYSQL_USER`
+  - `MYSQL_PASSWORD`
+  - `MYSQL_DATABASE`
 
 ### “No handler registered for 'auth:login'”
 - Call `registerAuthHandlers()` **before** `loadURL()` in `main.ts`.
@@ -281,7 +285,7 @@ npm run deps:rebuild
 - Electron: 31.7.x
 - Angular: 20.x
 - Express: 5.x
-- better-sqlite3: 12.x (types via `@types/better-sqlite3@7.x`)
+- mysql2: 3.x
 - Argon2: 0.41.x
 
 ---

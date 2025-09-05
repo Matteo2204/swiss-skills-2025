@@ -21,7 +21,9 @@ export class ItemsComponent {
   data = signal<Item[]>([]);
   name = '';
   err = '';
-  constructor(private ipc: IpcService, private auth: AuthService) { this.load(); }
+  constructor(private ipc: IpcService, private auth: AuthService) {
+    this.auth.ready().then(() => this.load());
+  }
   async load() {
     const res: any = await this.ipc.invoke('items:list', this.auth.withToken());
     if (res.ok) this.data.set(res.data);

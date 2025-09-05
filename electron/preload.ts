@@ -5,7 +5,9 @@ import type { IpcChannel } from './types';
 type Channel =
     | 'auth:login'
     | 'auth:logout'
-    | 'auth:register'   // ⬅️ nuovo
+    | 'auth:register'
+    | 'auth:last-remembered'
+    | 'auth:me'
     | 'items:list'
     | 'items:create'
     | 'items:delete';
