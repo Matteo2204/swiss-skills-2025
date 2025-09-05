@@ -20,7 +20,7 @@ export function registerAuthHandlers() {
     console.log("[ipc] registering", IPC.AUTH_LOGIN, IPC.AUTH_LOGOUT);
 
     // LOGIN
-    ipcMain.handle(IPC.AUTH_LOGIN, async (_e, { username, password }: { username: string; password: string }) => {
+    ipcMain.handle(IPC.AUTH_LOGIN, async (_e, { username, password, remember }: { username: string; password: string; remember?: boolean }) => {
         const db = getDB();
 
         // Tipiamo la statement: bind [string], result DbUserRow
@@ -38,7 +38,7 @@ export function registerAuthHandlers() {
         // Crea un token di sessione (persistente)
         const token = crypto.randomBytes(24).toString("base64url");
         try {
-            await getDB().prepare('INSERT INTO sessions (token, user_id, role) VALUES (?,?,?)').run(token, row.id, row.role);
+            await getDB().prepare('INSERT INTO sessions (token, user_id, role, remember) VALUES (?,?,?,?)').run(token, row.id, row.role, remember ? 1 : 0);
         } catch (e) {
             // ignore duplicate or transient errors; we'll still return the token
         }
@@ -99,6 +99,21 @@ export function registerAuthHandlers() {
         const user = await getDB().prepare('SELECT id, username, role FROM users WHERE id = ?').get(s.user_id) as { id: number; username: string; role: Role } | undefined;
         if (!user) return { ok: false };
         return { ok: true, user };
+    });
+
+    // Last remembered session
+    ipcMain.handle(IPC.AUTH_LAST_REMEMBERED, async () => {
+        const row = await getDB().prepare(
+            `SELECT s.token, u.id, u.username, u.role
+             FROM sessions s
+             JOIN users u ON u.id = s.user_id
+             WHERE s.remember = 1
+             ORDER BY s.created_at DESC
+             LIMIT 1`
+        ).get() as { token: string; id: number; username: string; role: Role } | undefined;
+        if (!row) return { ok: false };
+        sessions.set(row.token, { user_id: row.id, role: row.role, created_at: Date.now() });
+        return { ok: true, token: row.token, user: { id: row.id, username: row.username, role: row.role } };
     });
 
 }

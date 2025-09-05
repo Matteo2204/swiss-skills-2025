@@ -11,8 +11,9 @@ export interface Crumb { label: string; route?: string; }
   selector: 'app-topbar',
   imports: [RouterLink, RouterLinkActive, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'd-block border-bottom' },
+  host: { class: 'd-block border-bottom app-topbar' },
   templateUrl: './topbar.component.html',
+  styleUrl: './topbar.component.css',
 })
 export class TopbarComponent {
   title = input.required<string>();

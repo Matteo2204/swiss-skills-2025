@@ -2,7 +2,7 @@ import {Component, computed, effect, inject, signal} from '@angular/core';
 import {Router, RouterOutlet} from '@angular/router';
 import {AuthService} from './core/auth.service';
 import {Role} from '@shared/models';
-import {Crumb, TopbarComponent} from '@shared/topbar/topbar.component';
+import {Crumb} from '@shared/topbar/topbar.component';
 import {SidebarComponent, SideNavItem, SideUser, TopbarAction} from '@shared/sidebar/sidebar.component';
 
 type SideItemId = 'home' | 'items' | 'reports' | string;
@@ -10,7 +10,7 @@ type TopActionId = 'new' | 'export' | string;
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SidebarComponent, TopbarComponent],
+  imports: [RouterOutlet, SidebarComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

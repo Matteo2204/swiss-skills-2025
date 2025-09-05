@@ -5,7 +5,7 @@ Tech stack:
 
 - **Frontend**: Angular 20
 - **Desktop wrapper**: Electron 31
-- **Database**: MySQL (via `mysql2`)
+- **Database**: MySQL esterno (via `mysql2`)
 - **Auth**: Argon2 password hashing + in-memory sessions
 - **Local server**: Express 5 (serves the Angular build in packaged mode)
 - **Packaging**: electron-builder (DMG on macOS, ZIP on Windows)
@@ -69,12 +69,7 @@ typeof window.api === "object"   // should be true (preload bridge)
 ### Dev (HMR)
 - Angular: `http://localhost:4200/`
 - Electron loads that URL.
-- Database created in a project-local portable folder (see **Data persistence**).
-
-Per l'avvio in dev senza variabili `MYSQL_*`, assicurati di avere i binari:
-- `resources/mysql/<piattaforma>/bin/mysqld[.exe]` nel progetto, oppure
-- imposta `MYSQL_BUNDLE_URL` (+ opzionale `MYSQL_BUNDLE_SHA256`) per il download al primo avvio, oppure
-- usa un server MySQL esterno impostando `MYSQL_*`.
+- Database: usa MySQL esterno (defaults VM/dev: `localhost:3306`, `root/ictskills`, DB `ictskills`).
 
 Start:
 ```bash
@@ -121,8 +116,7 @@ npm start
 │  ├─ preload.ts             # Secure bridge: window.api.invoke(...)
 │  ├─ server.ts              # Express 5 server (serves UI in built/packaged)
 │  ├─ db/
-│  │  ├─ index.ts            # MySQL adapter + schema/seed + sidecar bootstrap
-│  │  ├─ mysql-server.ts     # Portable MySQL sidecar (init/start/stop, logs, download fallback)
+│  │  ├─ index.ts            # MySQL adapter + schema/seed
 │  │  ├─ utils.ts            # Argon2 helpers, etc.
 │  │  └─ schema.mysql.sql    # DDL (users table, items, ...)
 │  └─ ipc/
@@ -177,33 +171,17 @@ Handlers are registered early in `main.ts` **before** any `loadURL()`.
 ## Database & data persistence
 
 - Engine: **MySQL**, driver **mysql2**.
-- Avvio automatico DB locale (sidecar) se non sono presenti variabili `MYSQL_*`.
-- Schema applicato da `electron/db/schema.mysql.sql` al primo avvio.
-- Dati persistenti in `getPortableDataDir()/db/mysql/datadir` (portabile accanto all'eseguibile).
-- Utenti seed (se DB vuoto):
-    - `admin` / `admin123` (ruolo: ADMIN)
-    - `operator` / `operator123` (ruolo: OPERATOR)
+- Ci si collega sempre ad un MySQL esterno:
+  - Env vars (se presenti): `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
+  - Default (VM e dev): `localhost:3306`, user `root`, password `ictskills`, database `ictskills`.
+- Al primo avvio applica lo schema `electron/db/schema.mysql.sql` e inserisce utenti seed se assenti:
+  - `admin/admin123` (ADMIN), `operator/operator123` (OPERATOR)
 
-### MySQL bundled (consigliato per macOS e Windows)
+### Configurazione rapida (dev/VM)
 
-Per avere un'app completamente portabile (doppio click e funziona offline), includi MySQL dentro la cartella `resources` del progetto prima del packaging o dell'esecuzione in dev.
-
-Struttura richiesta:
-- `resources/mysql/darwin-arm64/bin/mysqld` (macOS Apple Silicon)
-- `resources/mysql/darwin-x64/bin/mysqld` (macOS Intel)
-- `resources/mysql/win32-x64/bin/mysqld.exe` (Windows x64)
-
-Cosa copiare:
-- l'intero contenuto dell'archivio ufficiale di MySQL Community Server (bin, lib, share, plugins, ecc.).
-
-Dove scaricare:
-- Sito ufficiale MySQL Community Server (8.4 LTS consigliato): https://dev.mysql.com/downloads/mysql/
-- macOS: scegli il pacchetto “Generic (tar archive)” per l'architettura corretta.
-- Windows: scegli “ZIP Archive (x86, 64-bit)”.
-
-Note:
-- Su macOS, imposta il bit eseguibile su `mysqld` (`chmod +x`). Per la miglior compatibilità con Gatekeeper, firma i binari inclusi insieme all'app.
-- In packaging, `extraResources` è già configurato per includere `resources/mysql/**` nel bundle.
+- Senza env vars, l'app tenta automaticamente `localhost:3306` con `root/ictskills` sul DB `ictskills` (default VM SwissSkills).
+- Per ambienti diversi, esporta:
+  - `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
 
 
 
@@ -239,13 +217,6 @@ Key points in `electron/server.ts`:
     "electron/db/schema.mysql.sql",
     "electron/db/migrate.ts",
     "electron/db/migrations/**/*"],
-  "extraResources": [
-    {
-      "from": "resources/mysql",
-      "to": "resources/mysql",
-      "filter": ["**/*"]
-    }
-  ],
   "asarUnpack": ["**/*.node"],
   "mac": { "target": ["dmg", "zip"] },
   "win": { "target": ["zip"] },

@@ -4,8 +4,6 @@ import path from 'path';
 import type { Pool, PoolOptions, ResultSetHeader } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
 import { hashPassword } from './utils';
-import { ensureLocalMysqlIfNeeded } from './mysql-server';
-import { getPortableDataDir } from './paths';
 
 type Row = Record<string, any>;
 
@@ -88,7 +86,8 @@ function buildWrapper(p: Pool): DBClass {
         } catch (e: any) {
           const code = e?.code ?? e?.errno;
           // Ignore "duplicate index" if schema applied multiple times
-          if (code === 'ER_DUP_KEYNAME' || code === 1061) continue;
+          // or duplicate column when applying ALTERs
+          if (code === 'ER_DUP_KEYNAME' || code === 1061 || code === 'ER_DUP_FIELDNAME' || code === 1060) continue;
           throw e;
         }
       }
@@ -102,51 +101,28 @@ export function getDB(): DBClass {
 }
 
 export async function initDB() {
-  // If no external env present, attempt to start local sidecar
-  let localInfo: { host: string; port: number; user: string; password: string; database: string; socketPath?: string } | null = null;
-  try {
-    const baseDir = getPortableDataDir();
-    localInfo = await ensureLocalMysqlIfNeeded(baseDir);
-  } catch (e) {
-    // If sidecar fails and external env is missing, we will error below via env()
-    log('Sidecar not used or failed:', (e as Error)?.message);
-  }
-
-  // Read connection details from env or from sidecar
-  const host = localInfo?.host ?? env('MYSQL_HOST', 'localhost');
-  const port = localInfo?.port ?? Number(env('MYSQL_PORT', '3306'));
-  const user = localInfo?.user ?? env('MYSQL_USER');
-  const password = localInfo?.password ?? env('MYSQL_PASSWORD', '');
-  const database = localInfo?.database ?? env('MYSQL_DATABASE');
+  // External MySQL only: env vars if provided, else VM/dev defaults
+  const host = env('MYSQL_HOST', 'localhost');
+  const port = Number(env('MYSQL_PORT', '3306'));
+  const user = env('MYSQL_USER', 'root');
+  const password = env('MYSQL_PASSWORD', 'ictskills');
+  const database = env('MYSQL_DATABASE', 'ictskills');
 
   const baseOpts: PoolOptions = {
-    host,
-    port,
-    user,
-    password,
+    host, port, user, password,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
     multipleStatements: false,
   };
-  if (localInfo?.socketPath) {
-    // Prefer Unix socket on macOS/Linux to ensure root@localhost works during bootstrap
-    (baseOpts as any).socketPath = localInfo.socketPath;
-  }
 
-  // If using external env, ensure database exists with provided user
-  if (!localInfo) {
+  // Ensure database exists (best effort)
+  try {
     const rootPool = await mysql.createPool(baseOpts);
-    try {
-      await ensureDatabaseExists(rootPool, database);
-    } finally {
-      await rootPool.end();
-    }
-  }
+    try { await ensureDatabaseExists(rootPool, database); } finally { await rootPool.end(); }
+  } catch {}
 
-  // Create pool bound to the application database
-  const finalOpts: PoolOptions = { ...baseOpts, database };
-  pool = await mysql.createPool(finalOpts);
+  pool = await mysql.createPool({ ...baseOpts, database });
   db = buildWrapper(pool);
 
   // Apply schema
@@ -154,6 +130,21 @@ export async function initDB() {
   log('using schema:', schemaPath);
   const ddl = fs.readFileSync(schemaPath, 'utf8');
   await db.exec(ddl);
+
+  // Migrate: ensure 'remember' column exists in sessions for older DBs
+  try {
+    const [rows]: any = await pool.query(
+      `SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'sessions' AND COLUMN_NAME = 'remember'`,
+      [database]
+    );
+    const exists = Array.isArray(rows) && rows.length > 0;
+    if (!exists) {
+      await pool.query(`ALTER TABLE sessions ADD COLUMN remember TINYINT(1) NOT NULL DEFAULT 0`);
+      log("migrated: added sessions.remember");
+    }
+  } catch (e) {
+    log('migration check failed (non-fatal):', (e as Error)?.message);
+  }
 
   // Minimal seed: ensure at least admin/operator users exist
   const row = (await db.prepare('SELECT COUNT(*) c FROM users').get()) as { c: number } | undefined;

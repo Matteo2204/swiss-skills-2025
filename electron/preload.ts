@@ -6,6 +6,7 @@ type Channel =
     | 'auth:login'
     | 'auth:logout'
     | 'auth:register'
+    | 'auth:last-remembered'
     | 'auth:me'
     | 'items:list'
     | 'items:create'

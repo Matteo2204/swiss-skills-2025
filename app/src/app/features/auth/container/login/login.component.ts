@@ -37,7 +37,7 @@ import { AuthService } from '../../../../core/auth.service';
 export class LoginComponent {
   username = '';
   password = '';
-  remember = false;
+  remember = true;
   error = signal(false);
 
   private readonly auth = inject(AuthService);

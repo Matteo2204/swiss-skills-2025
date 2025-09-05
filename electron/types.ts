@@ -5,6 +5,7 @@ export const IPC = {
     AUTH_LOGIN:    'auth:login',
     AUTH_LOGOUT:   'auth:logout',
     AUTH_REGISTER: 'auth:register',
+    AUTH_LAST_REMEMBERED: 'auth:last-remembered',
     AUTH_ME:       'auth:me',
     ITEMS_LIST:    'items:list',
     ITEMS_CREATE:  'items:create',

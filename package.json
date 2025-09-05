@@ -39,7 +39,6 @@
   "dependencies": {
     "argon2": "^0.41.1",
     "mysql2": "^3.11.3",
-    "extract-zip": "^2.0.1",
     "express": "^5.1.0"
   },
   "build": {
@@ -51,14 +50,7 @@
       "electron/db/migrate.ts",
       "electron/db/migrations/**/*"],
     "asarUnpack": ["**/*.node"],
-    "extraResources": [
-      {
-        "from": "resources/mysql",
-        "to": "resources/mysql",
-        "filter": ["**/*"]
-      }
-    ],
-    "afterSign": "scripts/afterSign.js",
+    
     "mac": { "target": ["dmg","zip"], "category": "public.app-category.utilities" },
     "win": { "target": ["zip"] },
     "dmg": {

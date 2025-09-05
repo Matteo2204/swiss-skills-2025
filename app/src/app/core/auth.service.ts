@@ -43,11 +43,20 @@ export class AuthService {
         this._token.set(null); this._user.set(null); localStorage.removeItem(this.STORAGE_KEY);
       }
     }
+    // 1c) se non c'è token, prova a ripristinare l'ultima sessione ricordata (persistente nel DB)
+    if (!this._token()) {
+      try {
+        const res: any = await this.ipc.invoke('auth:last-remembered');
+        if (res?.ok && res.user && res.token) {
+          this.setSession(res.user as User, res.token as string, true);
+        }
+      } catch { /* ignore */ }
+    }
   }
 
   // --- API ---
   async login(username: string, password: string, remember = false): Promise<boolean> {
-    const res = await this.ipc.invoke<LoginResult>('auth:login', { username, password });
+    const res = await this.ipc.invoke<LoginResult>('auth:login', { username, password, remember });
     if (res?.ok && res.user) {
       // se il backend non fornisce token, usiamo uno stub per la sessione
       const token = res.token ?? 'SESSION';

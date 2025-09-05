@@ -4,7 +4,7 @@
   @if (!isCollapsed()) {
     <strong class="flex-grow-1 text-truncate">{{ title() }}</strong>
   }
-  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="toggle()">
+  <button type="button" class="btn btn-outline-secondary sidebar-toggle" (click)="toggle()">
     <i class="bi"
        [class.bi-chevron-left]="!isCollapsed()"
        [class.bi-chevron-right]="isCollapsed()"
@@ -60,9 +60,9 @@
 
   @if (user()) {
     <hr class="my-3" />
-    <div class="d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center justify-content-between user-block">
       <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-person-circle" style="font-size: 28px;" aria-hidden="true"></i>
+        <span class="avatar"><i class="bi bi-person-circle" aria-hidden="true"></i></span>
 
         @if (!isCollapsed()) {
           <div>

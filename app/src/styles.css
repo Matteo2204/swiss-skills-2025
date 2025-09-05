@@ -1,2 +1,113 @@
 html, body { height: 100%; }
-body { background-color: var(--bs-body-bg); }/* You can add global styles to this file, and also import other style files */
+
+/* Brand palette */
+:root {
+  --brand-1: #154D71; /* deep blue */
+  --brand-2: #1C6EA4; /* primary blue */
+  --brand-3: #33A1E0; /* light blue */
+  --brand-accent: #FFF9AF; /* soft yellow */
+
+  /* Bootstrap 5 CSS variable overrides */
+  --bs-primary: var(--brand-2);
+  --bs-primary-rgb: 28, 110, 164; /* #1C6EA4 */
+  --bs-link-color: var(--brand-2);
+  --bs-link-hover-color: var(--brand-1);
+  --bs-body-bg: #f7fafc; /* subtle neutral background */
+  --bs-focus-ring-color: rgba(51, 161, 224, 0.35); /* brand-3 */
+}
+
+body { background-color: var(--bs-body-bg); }
+
+/* Topbar: clean, light background, brand accents */
+.app-topbar { background-color: #ffffff; color: var(--brand-1); }
+.app-topbar strong { color: var(--brand-1); }
+.app-topbar a { color: var(--brand-2); }
+.app-topbar .breadcrumb a { color: var(--brand-2); }
+
+/* Sidebar */
+.app-sidebar { background-color: #ffffff; position: relative; }
+.app-sidebar::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; right: 0;
+  width: 4px;
+  background: var(--brand-2);
+  pointer-events: none;
+}
+.app-sidebar .btn.btn-outline-primary { border-width: 1.5px; }
+
+/* Normalize sidebar nav item sizes */
+.app-sidebar nav a.btn {
+  height: 40px;
+  padding: 0 .75rem;
+  display: flex;
+  align-items: center;
+}
+.app-sidebar nav a.btn .bi { font-size: 1.1rem; }
+
+/* Collapsed: square icon buttons centered */
+.app-sidebar.is-collapsed nav a.btn {
+  justify-content: center !important;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+.app-sidebar.is-collapsed nav a.btn .badge { display: none; }
+
+/* Collapsed: action buttons consistent size */
+.app-sidebar.is-collapsed .d-flex.flex-wrap button.btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Sidebar header toggle size */
+.app-sidebar .sidebar-toggle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.app-sidebar.is-collapsed .sidebar-toggle { width: 40px; height: 40px; border-width: 1.5px; }
+
+/* Sidebar user block avatar normalized */
+.app-sidebar .user-block .avatar {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-sidebar .user-block .avatar .bi { font-size: 1.6rem; }
+.app-sidebar.is-collapsed .user-block .avatar { width: 40px; height: 40px; }
+
+/* Collapsed: unify icon sizes across toggle, nav, avatar (same as expanded) */
+.app-sidebar.is-collapsed i.bi { font-size: 1.1rem !important; }
+.app-sidebar.is-collapsed .user-block .avatar .bi { font-size: 1.6rem !important; }
+
+/* Collapsed: unify outline border width for consistent visual weight */
+.app-sidebar.is-collapsed .btn.btn-outline-primary,
+.app-sidebar.is-collapsed .btn.btn-outline-secondary,
+.app-sidebar.is-collapsed .sidebar-toggle { border-width: 1.5px; }
+
+/* Cards / sections highlight */
+.highlight {
+  background-color: var(--brand-accent);
+  border: 1px solid rgba(0,0,0,.05);
+  border-radius: .5rem;
+}
+
+/* Inputs focus */
+input.form-control:focus, textarea.form-control:focus, select.form-select:focus {
+  border-color: var(--brand-3);
+  box-shadow: 0 0 0 .2rem var(--bs-focus-ring-color);
+}
+
+/* Buttons hover/focus polish */
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-outline-primary:hover { background-color: var(--brand-2); border-color: var(--brand-2); color: #fff; }
