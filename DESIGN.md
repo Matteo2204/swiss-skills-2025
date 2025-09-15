@@ -22,7 +22,7 @@
 - **Auto-ensure DB**: On startup, attempts to create the target database if missing (best effort).
 
 ## Authentication & Sessions
-- **Login**: `auth:login` verifies credentials (argon2) and creates a persistent session token in table `sessions`.
+- **Login**: `auth:login` verifies credentials (scrypt) and creates a persistent session token in table `sessions`.
 - **Sessions table**: `token`, `user_id`, `role`, `created_at`, `remember (TINYINT)`, `expires_at (NULL)`.
 - **Remember me**:
   - UI passes `remember` to `auth:login`; server stores `remember=1`.

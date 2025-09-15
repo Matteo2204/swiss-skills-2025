@@ -22,7 +22,7 @@
 - “Ricordami” persists the session across restarts. Logout clears it.
 
 ## Features overview
-- Authentication with Argon2 password hashing.
+- Authentication with Node crypto.scrypt password hashing.
 - Items example (list / create / delete) to demonstrate CRUD wiring.
 - Sidebar layout with clear navigation, keyboard‑friendly focus states.
 
@@ -36,4 +36,3 @@
 - Development mirrors the VM defaults; override with env vars if needed:
   - `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
 - See DESIGN.md for architectural decisions and the full IPC surface.
-

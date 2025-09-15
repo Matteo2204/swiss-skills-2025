@@ -2,7 +2,7 @@
 import { ipcMain } from "electron";
 import { getDB } from "../db";
 import { IPC, Role } from "../types";
-import argon2 from "argon2";
+import { verifyPassword, hashPassword } from "../db/utils";
 import crypto from "crypto";
 
 // --- Tipi del record che torna dalla SELECT ---
@@ -32,7 +32,7 @@ export function registerAuthHandlers() {
 
         if (!row) return { ok: false, error: "INVALID_CREDENTIALS" };
 
-        const ok = await argon2.verify(row.password_hash, password);
+        const ok = await verifyPassword(row.password_hash, password);
         if (!ok) return { ok: false, error: "INVALID_CREDENTIALS" };
 
         // Crea un token di sessione (persistente)
@@ -73,7 +73,7 @@ export function registerAuthHandlers() {
         if (exists) return { ok: false, error: 'USERNAME_TAKEN' };
 
         try {
-            const hash = await argon2.hash(p);
+            const hash = await hashPassword(p);
             const role: Role = 'OPERATOR'; // default
             await db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?,?,?)').run(u, hash, role);
             return { ok: true };

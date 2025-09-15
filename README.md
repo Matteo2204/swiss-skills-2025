@@ -6,7 +6,7 @@ Tech stack:
 - **Frontend**: Angular 20
 - **Desktop wrapper**: Electron 31
 - **Database**: MySQL esterno (via `mysql2`)
-- **Auth**: Argon2 password hashing + in-memory sessions
+- **Auth**: Node crypto.scrypt password hashing + in-memory sessions
 - **Local server**: Express 5 (serves the Angular build in packaged mode)
 - **Packaging**: electron-builder (DMG on macOS, ZIP on Windows)
 
@@ -117,7 +117,7 @@ npm start
 │  ├─ server.ts              # Express 5 server (serves UI in built/packaged)
 │  ├─ db/
 │  │  ├─ index.ts            # MySQL adapter + schema/seed
-│  │  ├─ utils.ts            # Argon2 helpers, etc.
+│  │  ├─ utils.ts            # Scrypt helpers (hash/verify)
 │  │  └─ schema.mysql.sql    # DDL (users table, items, ...)
 │  └─ ipc/
 │     └─ auth.ts             # IPC handlers: 'auth:login', 'auth:logout'
@@ -286,7 +286,7 @@ npx electron-builder --mac zip
 - Angular: 20.x
 - Express: 5.x
 - mysql2: 3.x
-- Argon2: 0.41.x
+- Password hashing: Node crypto.scrypt
 
 ---
 
