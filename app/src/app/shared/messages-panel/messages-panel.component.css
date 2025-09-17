@@ -1,0 +1,14 @@
+.msg-viewport { height: 320px; overflow: auto; border: 1px solid #eee; border-radius: .25rem; }
+.msg-row { display: grid; grid-template-columns: 80px 1fr 110px; align-items: center; gap: .5rem; padding: .5rem .75rem; height: 56px; border-bottom: 1px solid #f1f3f5; }
+.msg-row:last-child { border-bottom: none; }
+.msg-badge { font-weight: 700; font-size: 12px; padding: .125rem .375rem; border-radius: .25rem; text-align: center; width: 64px; }
+.msg-text { color: #212529; }
+.msg-ts { color: #6c757d; font-size: 12px; text-align: right; }
+
+.msg-info .msg-badge { background: var(--bs-info); color: #212529; }
+.msg-warn .msg-badge { background: var(--bs-warning); color: #212529; }
+.msg-error .msg-badge { background: var(--bs-danger); color: #fff; }
+
+/* Virtualization layers */
+.msg-spacer { width: 1px; opacity: 0; }
+.msg-virtual { position: relative; will-change: transform; }

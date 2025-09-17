@@ -1,0 +1,5 @@
+:host { --separator-color: rgba(0,0,0,.08); border-top-color: var(--separator-color) !important; font-size: 12px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.dot-ok { background: var(--bs-success); }
+.dot-warn { background: var(--bs-warning); }
+.dot-err { background: var(--bs-danger); }

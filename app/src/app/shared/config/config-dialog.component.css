@@ -1,0 +1,8 @@
+.config-dialog::backdrop { background: rgba(0,0,0,.4); }
+.config-dialog { border: none; border-radius: 8px; width: 640px; max-width: calc(100vw - 2rem); padding: 0; }
+.content { background: #fff; border-radius: 8px; overflow: hidden; }
+.header { padding: .75rem 1rem; border-bottom: 1px solid rgba(0,0,0,.1); }
+.body { padding: 1rem; }
+.footer { padding: .75rem 1rem; border-top: 1px solid rgba(0,0,0,.1); }
+.content.is-busy::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,.4); pointer-events: none; }
+

@@ -1,0 +1,24 @@
+/* Modal base using native <dialog> */
+.app-modal { border: none; padding: 0; border-radius: .5rem; width: 720px; max-width: calc(100vw - 2rem); }
+.app-modal::backdrop { background: rgba(0,0,0,.4); }
+
+.modal-content { background: #fff; border-radius: .5rem; overflow: hidden; position: relative; }
+.modal-header { padding: .75rem 1rem; border-bottom: 1px solid rgba(0,0,0,.1); }
+.modal-body { padding: 1rem; }
+.modal-footer { padding: .75rem 1rem; border-top: 1px solid rgba(0,0,0,.1); }
+
+/* Busy spinner hint */
+.modal-content.is-busy::after {
+  content: ""; position: absolute; inset: 0; background: rgba(255,255,255,.5); pointer-events: none;
+}
+
+/* Avatar preview: fixed square to avoid layout jumps */
+.avatar-block { width: 120px; }
+.avatar-preview { width: 100px; height: 100px; border-radius: 8px; overflow: hidden; background: var(--bs-light); display: flex; align-items: center; justify-content: center; }
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-fallback { color: var(--bs-secondary-color); line-height: 0; }
+.avatar-fallback .bi { font-size: 2rem; }
+
+/* Focus ring */
+button:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+

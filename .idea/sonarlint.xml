@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SonarLintProjectSettings">
+    <option name="fileExclusions">
+      <list>
+        <option value="FILE:errors/battery history.png" />
+        <option value="FILE:errors/battery live.png" />
+      </list>
+    </option>
+  </component>
+</project>

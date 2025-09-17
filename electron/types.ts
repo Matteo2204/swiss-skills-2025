@@ -7,9 +7,10 @@ export const IPC = {
     AUTH_REGISTER: 'auth:register',
     AUTH_LAST_REMEMBERED: 'auth:last-remembered',
     AUTH_ME:       'auth:me',
-    ITEMS_LIST:    'items:list',
-    ITEMS_CREATE:  'items:create',
-    ITEMS_DELETE:  'items:delete',
+    EXPORT_SAVE_JSON: 'export:save-json',
+    CONFIG_READ:   'config:read',
+    CONFIG_WRITE:  'config:write',
+    DIALOG_SAVE_PATH: 'dialog:save-path',
 } as const;
 
 export type IpcChannel = typeof IPC[keyof typeof IPC];

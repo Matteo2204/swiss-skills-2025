@@ -1,0 +1,26 @@
+.map-wrap { width: 100%; height: auto; }
+.map-svg { width: 100%; height: auto; display: block; }
+.bg { fill: #f8f9fa; }
+.border { stroke: #dee2e6; stroke-width: 1; }
+.path { fill: none; stroke: var(--bs-primary); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.marker-dot { fill: var(--bs-primary); stroke: #fff; stroke-width: 2; }
+.marker-outline { fill: none; stroke: var(--bs-primary); stroke-width: 2; }
+.stuck-badge { fill: var(--bs-danger); }
+.stuck-text { fill: #fff; font-size: 10px; font-weight: 700; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+.placeholder { color: #6c757d; font-style: italic; margin-top: 8px; }
+
+.tooltip-overlay {
+  position: absolute;
+  transform: translate(8px, -8px);
+  pointer-events: none;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  font-size: 11px;
+  border-radius: 4px;
+  padding: 6px 8px;
+  white-space: nowrap;
+  z-index: 10;
+}
+.tt-line { display: flex; gap: 6px; }
+.tt-k { opacity: 0.7; min-width: 20px; }
+.tt-v { font-weight: 600; }

@@ -1,0 +1,18 @@
+<div class="d-flex align-items-center gap-2">
+  <small class="text-muted">Last update: {{ rt.lastUpdateIso() }}</small>
+</div>
+
+<div class="d-flex align-items-center gap-3">
+  @if (rt.isConnected()) {
+    <small class="text-success d-flex align-items-center gap-1"><span class="dot dot-ok"></span> Live</small>
+  } @else if (rt.isConnecting()) {
+    <small class="text-muted d-flex align-items-center gap-1"><span class="dot dot-warn"></span> Connecting…</small>
+  } @else if (rt.inGracePeriod()) {
+    <small class="text-warning d-flex align-items-center gap-1"><span class="dot dot-warn"></span> Grace 60s</small>
+  } @else if (rt.offlineBannerVisible()) {
+    <small class="text-danger d-flex align-items-center gap-1"><span class="dot dot-err"></span> Backend disconnected</small>
+  } @else {
+    <small class="text-secondary">Degraded</small>
+  }
+</div>
+

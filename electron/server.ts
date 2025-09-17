@@ -19,7 +19,7 @@ async function listen(app: express.Express, port: number): Promise<Server> {
 
 export async function createExpressServer(
     staticRoot: string,
-    preferredPort = 3000
+    preferredPort = 3020
 ): Promise<{ url: string; server: Server }> {
     const app = express();
 
@@ -71,6 +71,39 @@ export async function createExpressServer(
         const addr = server.address();
         const p = typeof addr === "object" && addr ? addr.port : 0;
         console.log(`[server] Express listening on http://127.0.0.1:${p} (root: ${staticRoot})`);
+    }
+
+    const addr = server.address();
+    const port = typeof addr === "object" && addr ? addr.port : preferredPort;
+    const url = `http://127.0.0.1:${port}`;
+    return { url, server };
+}
+
+// Dev helper: tiny Express that redirects all requests to a target URL (e.g. Angular dev server)
+export async function createExpressRedirectServer(
+    targetUrl: string,
+    preferredPort = 3020
+): Promise<{ url: string; server: Server }> {
+    const app = express();
+
+    // No CSP on redirect responses in dev to avoid interfering with Angular dev server
+
+    // Root redirect
+    app.get("/", (_req, res) => res.redirect(302, targetUrl));
+
+    // Express 5: use RegExp fallback, preserve original URL for path
+    app.get(/.*/, (req, res) => res.redirect(302, targetUrl + req.originalUrl));
+
+    let server: Server;
+    try {
+        server = await listen(app, preferredPort);
+        console.log(`[server] Express (dev redirect) on http://127.0.0.1:${preferredPort} → ${targetUrl}`);
+    } catch (err: any) {
+        console.warn(`[server] Port ${preferredPort} busy (${err?.code}). Falling back to random port.`);
+        server = await listen(app, 0);
+        const addr = server.address();
+        const p = typeof addr === "object" && addr ? addr.port : 0;
+        console.log(`[server] Express (dev redirect) on http://127.0.0.1:${p} → ${targetUrl}`);
     }
 
     const addr = server.address();

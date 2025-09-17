@@ -1,28 +1,55 @@
 html, body { height: 100%; }
 
-/* Brand palette */
+/* Brand palette (Green + Red only) */
 :root {
-  --brand-1: #154D71; /* deep blue */
-  --brand-2: #1C6EA4; /* primary blue */
-  --brand-3: #33A1E0; /* light blue */
-  --brand-accent: #FFF9AF; /* soft yellow */
+  --brand-greenbot: #7F8F3D;   /* primary */
+  --brand-forest:   #228B22;   /* success */
+  --brand-neon:     #39FF14;   /* accent/info */
+  --brand-signal:   #F43333;   /* danger */
+  --brand-coral:    #FF7979;   /* warning */
+  --brand-fire:     #B22222;   /* secondary/dark */
+
+  /* RGB helpers for alpha uses */
+  --brand-greenbot-rgb: 127, 143, 61;
+  --brand-forest-rgb:   34, 139, 34;
+  --brand-neon-rgb:     57, 255, 20;
+  --brand-signal-rgb:   244, 51, 51;
+  --brand-coral-rgb:    255, 121, 121;
+  --brand-fire-rgb:     178, 34, 34;
 
   /* Bootstrap 5 CSS variable overrides */
-  --bs-primary: var(--brand-2);
-  --bs-primary-rgb: 28, 110, 164; /* #1C6EA4 */
-  --bs-link-color: var(--brand-2);
-  --bs-link-hover-color: var(--brand-1);
-  --bs-body-bg: #f7fafc; /* subtle neutral background */
-  --bs-focus-ring-color: rgba(51, 161, 224, 0.35); /* brand-3 */
+  --bs-primary:       var(--brand-greenbot);
+  --bs-primary-rgb:   var(--brand-greenbot-rgb);
+  --bs-success:       var(--brand-forest);
+  --bs-success-rgb:   var(--brand-forest-rgb);
+  --bs-info:          var(--brand-neon);
+  --bs-info-rgb:      var(--brand-neon-rgb);
+  --bs-danger:        var(--brand-signal);
+  --bs-danger-rgb:    var(--brand-signal-rgb);
+  --bs-warning:       var(--brand-coral);
+  --bs-warning-rgb:   var(--brand-coral-rgb);
+  --bs-secondary:     var(--brand-fire);
+  --bs-secondary-rgb: var(--brand-fire-rgb);
+
+  --bs-link-color:        var(--bs-primary);
+  --bs-link-hover-color:  var(--brand-forest);
+  --bs-body-bg: #ffffff; /* neutral */
+  --bs-focus-ring-color: rgba(var(--brand-neon-rgb), 0.35);
+
+  /* Forms (avoid default blue when checked/active) */
+  --bs-form-check-input-checked-bg-color: var(--bs-primary);
+  --bs-form-check-input-checked-border-color: var(--bs-primary);
+  --bs-form-switch-color: var(--bs-primary);
+  --bs-form-range-thumb-bg: var(--bs-primary);
 }
 
 body { background-color: var(--bs-body-bg); }
 
-/* Topbar: clean, light background, brand accents */
-.app-topbar { background-color: #ffffff; color: var(--brand-1); }
-.app-topbar strong { color: var(--brand-1); }
-.app-topbar a { color: var(--brand-2); }
-.app-topbar .breadcrumb a { color: var(--brand-2); }
+/* Topbar: neutral bg, brand greens for content */
+.app-topbar { background-color: #ffffff; color: var(--bs-primary); }
+.app-topbar strong { color: var(--bs-primary); }
+.app-topbar a { color: var(--bs-link-color); }
+.app-topbar .breadcrumb a { color: var(--bs-link-color); }
 
 /* Sidebar */
 .app-sidebar { background-color: #ffffff; position: relative; }
@@ -31,7 +58,7 @@ body { background-color: var(--bs-body-bg); }
   position: absolute;
   top: 0; bottom: 0; right: 0;
   width: 4px;
-  background: var(--brand-2);
+  background: var(--bs-primary);
   pointer-events: none;
 }
 .app-sidebar .btn.btn-outline-primary { border-width: 1.5px; }
@@ -95,19 +122,105 @@ body { background-color: var(--bs-body-bg); }
 .app-sidebar.is-collapsed .btn.btn-outline-secondary,
 .app-sidebar.is-collapsed .sidebar-toggle { border-width: 1.5px; }
 
-/* Cards / sections highlight */
+/* Cards / sections highlight (neon tint) */
 .highlight {
-  background-color: var(--brand-accent);
+  background-color: rgba(var(--brand-neon-rgb), 0.12);
   border: 1px solid rgba(0,0,0,.05);
   border-radius: .5rem;
 }
 
 /* Inputs focus */
 input.form-control:focus, textarea.form-control:focus, select.form-select:focus {
-  border-color: var(--brand-3);
+  border-color: var(--bs-info);
   box-shadow: 0 0 0 .2rem var(--bs-focus-ring-color);
 }
 
 /* Buttons hover/focus polish */
 .btn-primary:hover { filter: brightness(1.05); }
-.btn-outline-primary:hover { background-color: var(--brand-2); border-color: var(--brand-2); color: #fff; }
+.btn-outline-primary:hover { background-color: var(--bs-primary); border-color: var(--bs-primary); color: #fff; }
+
+/* Enforce palette on Bootstrap button variants (no blue fallbacks) */
+.btn { --bs-btn-focus-shadow-rgb: var(--brand-neon-rgb); }
+
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--bs-primary);
+  --bs-btn-hover-border-color: var(--bs-primary);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--bs-primary);
+  --bs-btn-active-border-color: var(--bs-primary);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--bs-primary);
+  --bs-btn-disabled-border-color: var(--bs-primary);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-bg: var(--bs-primary);
+  --bs-btn-hover-border-color: var(--bs-primary);
+  --bs-btn-active-bg: var(--bs-primary);
+  --bs-btn-active-border-color: var(--bs-primary);
+}
+
+.btn-success { --bs-btn-bg: var(--bs-success); --bs-btn-border-color: var(--bs-success); --bs-btn-hover-bg: var(--bs-success); --bs-btn-hover-border-color: var(--bs-success); --bs-btn-active-bg: var(--bs-success); --bs-btn-active-border-color: var(--bs-success); }
+.btn-info    { --bs-btn-bg: var(--bs-info);    --bs-btn-border-color: var(--bs-info);    --bs-btn-hover-bg: var(--bs-info);    --bs-btn-hover-border-color: var(--bs-info);    --bs-btn-active-bg: var(--bs-info);    --bs-btn-active-border-color: var(--bs-info); }
+.btn-warning { --bs-btn-bg: var(--bs-warning); --bs-btn-border-color: var(--bs-warning); --bs-btn-hover-bg: var(--bs-warning); --bs-btn-hover-border-color: var(--bs-warning); --bs-btn-active-bg: var(--bs-warning); --bs-btn-active-border-color: var(--bs-warning); }
+.btn-danger  { --bs-btn-bg: var(--bs-danger);  --bs-btn-border-color: var(--bs-danger);  --bs-btn-hover-bg: var(--bs-danger);  --bs-btn-hover-border-color: var(--bs-danger);  --bs-btn-active-bg: var(--bs-danger);  --bs-btn-active-border-color: var(--bs-danger); }
+.btn-secondary{--bs-btn-bg: var(--bs-secondary);--bs-btn-border-color: var(--bs-secondary);--bs-btn-hover-bg: var(--bs-secondary);--bs-btn-hover-border-color: var(--bs-secondary);--bs-btn-active-bg: var(--bs-secondary);--bs-btn-active-border-color: var(--bs-secondary);} 
+
+/* Ensure checked/active states keep the same base color (no blue) */
+.btn-check:checked + .btn-primary,
+.btn-check:active + .btn-primary,
+.btn-primary:active,
+.btn-primary.active,
+.show > .btn-primary.dropdown-toggle {
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
+  color: #fff !important;
+}
+
+.btn-check:checked + .btn-outline-primary,
+.btn-check:active + .btn-outline-primary,
+.btn-outline-primary:active,
+.btn-outline-primary.active,
+.show > .btn-outline-primary.dropdown-toggle {
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
+  color: #fff !important;
+}
+
+/* Nav pills active use primary */
+.nav-pills {
+  --bs-nav-pills-link-active-bg: var(--bs-primary);
+  --bs-nav-pills-link-active-color: #fff;
+}
+
+/* Nav tabs and underline active color in palette */
+.nav { --bs-nav-link-color: var(--bs-primary); --bs-nav-link-hover-color: var(--bs-success); }
+.nav-tabs {
+  --bs-nav-tabs-link-active-color: var(--bs-primary);
+  --bs-nav-tabs-link-active-bg: #fff;
+  --bs-nav-tabs-link-active-border-color: var(--bs-primary) var(--bs-primary) #fff;
+}
+.nav-underline { --bs-nav-underline-link-active-color: var(--bs-primary); }
+
+/* Pagination */
+.pagination {
+  --bs-pagination-color: var(--bs-primary);
+  --bs-pagination-hover-color: var(--bs-success);
+  --bs-pagination-active-bg: var(--bs-primary);
+  --bs-pagination-active-border-color: var(--bs-primary);
+}
+
+/* List group active */
+.list-group { --bs-list-group-active-bg: var(--bs-primary); --bs-list-group-active-border-color: var(--bs-primary); --bs-list-group-active-color: #fff; }
+
+/* Dropdown active item */
+.dropdown-menu { --bs-dropdown-link-active-bg: var(--bs-primary); --bs-dropdown-link-active-color: #fff; }
+
+/* Progress bar */
+.progress { --bs-progress-bar-bg: var(--bs-primary); }

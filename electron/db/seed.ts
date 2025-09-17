@@ -16,16 +16,7 @@ async function seed() {
         console.log("👤 Users seeded: admin/admin123, operator/operator123");
     }
 
-    // --- Dati esempio per 'items' (opzionale) ---
-    const rowI = await db.prepare("SELECT COUNT(*) as c FROM items").get() as { c: number };
-    const itemCount = Number((rowI as any)?.c ?? 0);
-    if (itemCount === 0) {
-        const ins = db.prepare("INSERT INTO items (name) VALUES (?)");
-        for (const n of ["Demo item A", "Demo item B", "Demo item C"]) {
-            await ins.run(n);
-        }
-        console.log("📦 Items seeded");
-    }
+    // Items demo removed: feature dropped
 
     console.log("✅ Seed complete");
 }

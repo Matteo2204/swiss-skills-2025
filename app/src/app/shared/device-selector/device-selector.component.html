@@ -1,0 +1,90 @@
+<div class="dropdown" [class.is-loading]="loading()" aria-live="polite">
+  <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2"
+          type="button"
+          id="deviceSelectorDropdown"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          [attr.aria-busy]="loading() ? 'true' : null"
+          [disabled]="loading()">
+    @if (current()) {
+      <span class="avatar" aria-hidden="true">
+        @if (avatarUrl(current()!.id) === undefined) {
+          <span class="avatar-fallback"><i class="bi bi-person-circle" aria-hidden="true"></i></span>
+        } @else if (avatarUrl(current()!.id) === null) {
+          <span class="avatar-fallback"><i class="bi bi-person-circle" aria-hidden="true"></i></span>
+        } @else {
+          <img [src]="avatarUrl(current()!.id)!" width="32" height="32" alt=""/>
+        }
+      </span>
+      <span>
+        {{ current()!.id }} — {{ current()!.name }} — {{ current()!.address }}
+      </span>
+    } @else {
+      <span class="avatar" aria-hidden="true">
+        <span class="avatar-fallback"><i class="bi bi-person-circle" aria-hidden="true"></i></span>
+      </span>
+      <span class="text-muted">Seleziona dispositivo…</span>
+    }
+  </button>
+
+  <ul class="dropdown-menu" aria-labelledby="deviceSelectorDropdown" role="menu">
+    @if (error()) {
+      <li><span class="dropdown-item text-danger" role="presentation">Errore: {{ error() }}</span></li>
+    } @else if (!mowers().length && !loading()) {
+      <li><span class="dropdown-item text-muted" role="presentation">Nessun dispositivo</span></li>
+    } @else {
+      @for (m of mowers(); track m.id) {
+        <li>
+          <button class="dropdown-item d-flex align-items-center gap-2"
+                  role="menuitemradio"
+                  [attr.aria-checked]="current()?.id === m.id"
+                  type="button"
+                  (click)="onSelect(m)">
+            <span class="avatar" aria-hidden="true">
+              @if (avatarUrl(m.id) === undefined) {
+                <span class="avatar-fallback"><i class="bi bi-person-circle" aria-hidden="true"></i></span>
+              } @else if (avatarUrl(m.id) === null) {
+                <span class="avatar-fallback"><i class="bi bi-person-circle" aria-hidden="true"></i></span>
+              } @else {
+                <img [src]="avatarUrl(m.id)!" width="32" height="32" alt=""/>
+              }
+            </span>
+            <span class="text-truncate">
+              <span class="text-body">{{ m.id }} — {{ m.name }} — {{ m.address }}</span>
+            </span>
+          </button>
+        </li>
+      }
+      <li><hr class="dropdown-divider"/></li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center gap-2" type="button" (click)="onAdd()">
+          <i class="bi bi-plus-circle" aria-hidden="true"></i>
+          <span>Aggiungi dispositivo…</span>
+        </button>
+      </li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center gap-2" type="button" (click)="onEdit()" [disabled]="!current()">
+          <i class="bi bi-pencil" aria-hidden="true"></i>
+          <span>Modifica selezionato…</span>
+        </button>
+      </li>
+      <li>
+        <button class="dropdown-item text-danger d-flex align-items-center gap-2" type="button" (click)="onDelete()" [disabled]="!current()">
+          <i class="bi bi-trash" aria-hidden="true"></i>
+          <span>Elimina selezionato…</span>
+        </button>
+      </li>
+      <li><hr class="dropdown-divider"/></li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center gap-2" type="button" (click)="onClear()">
+          <i class="bi bi-x-circle" aria-hidden="true"></i>
+          <span>Pulisci selezione</span>
+        </button>
+      </li>
+    }
+  </ul>
+</div>
+
+<!-- Modals: add/edit, delete -->
+<app-add-edit-mower-dialog></app-add-edit-mower-dialog>
+<app-delete-mower-dialog></app-delete-mower-dialog>

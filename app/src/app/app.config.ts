@@ -5,6 +5,7 @@ import { routes } from './app.routes';
 import {provideAnimations} from '@angular/platform-browser/animations';
 import {provideToastr} from 'ngx-toastr';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
+import {MessageEngineService} from '@shared/services/message-engine.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,6 +14,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimations(),
     provideAnimationsAsync(),
-    provideToastr()
+    provideToastr(),
+    // Expose message counts to OverviewHeader via provider contract
+    { provide: 'OverviewMessagesProvider', useExisting: MessageEngineService }
   ]
 };

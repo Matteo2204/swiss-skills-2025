@@ -1,0 +1,19 @@
+:host { --separator-color: rgba(0,0,0,.08); border-bottom-color: var(--separator-color) !important; }
+
+/* Keep a steady height to avoid layout jumps; adapt to content line-height */
+.app-overview-header { box-shadow: 0 1px 0 rgba(0,0,0,.04); }
+
+/* Gentle flash for Error state */
+.state-flash {
+  animation: flashPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes flashPulse {
+  0% { filter: none; }
+  50% { filter: brightness(1.15); }
+  100% { filter: none; }
+}
+
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.dot-ok { background: var(--bs-success); }
+.dot-warn { background: var(--bs-warning); }

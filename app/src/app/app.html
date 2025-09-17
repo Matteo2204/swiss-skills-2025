@@ -3,8 +3,9 @@
     <div class="d-flex" style="height:100vh; width: 100%;">
       <app-sidebar
         [title]="'Skill09App'"
-        [logo]="'assets/logo.png'"
+        [logo]="'favicon.ico'"
         [items]="items()"
+        [actions]="actions()"
         [user]="userVm()"
         [collapsed]="isCollapsed()"
         (collapseChange)="onSidebarCollapsed($event)"
@@ -15,8 +16,19 @@
 
       <div class="flex-grow-1 d-flex flex-column">
         <main class="p-3 overflow-auto">
+          @if (rt.offlineBannerVisible()) {
+            <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+              <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+              <div>Backend disconnected. Actions disabled until reconnect.</div>
+            </div>
+          }
           <router-outlet />
         </main>
+        <!-- Statusbar: double-click opens config viewer -->
+        <app-statusbar (dblclick)="onStatusbarDblClick()" />
+        <!-- Modals -->
+        <app-config-dialog #cfgDlg></app-config-dialog>
+        <app-import-dialog #importDlg></app-import-dialog>
       </div>
     </div>
   </div>

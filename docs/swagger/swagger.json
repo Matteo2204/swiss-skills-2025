@@ -1,0 +1,1006 @@
+{
+  "x-generator": "NSwag v14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "LawnmowerAPI v1",
+    "description": "This Web API provides endpoints for managing lawnmowers, avatars, measurements and remote control.<br><br><b>Hint:</b> For the documentation of the real-time interface, switch to the `LawnmowerHub` definition (found in the header of this page).",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://10.211.55.3:3000"
+    }
+  ],
+  "paths": {
+    "/api/lawnmowers": {
+      "get": {
+        "tags": [
+          "Lawnmower"
+        ],
+        "summary": "Get all lawnmowers",
+        "description": "Get a list of all lawnmowers (containing ID, name and address).",
+        "operationId": "GetLawnmowers",
+        "responses": {
+          "200": {
+            "description": "OK: list of lawnmowers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LawnmowerResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Lawnmower"
+        ],
+        "summary": "Create lawnmower",
+        "description": "Create a lawnmower giving name and address.<br>The input is validated as follows:<ul><li>The `name` must be unique.</li><li>The `address` must be unique.</li><li>The `address` must be specified as an IP (IPv4) followed by the port (Format: `<IP>:<PORT>`, e.g. `192.168.1.42:5467`).</li></ul>",
+        "operationId": "CreateLawnmower",
+        "requestBody": {
+          "x-name": "lawnmowerRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LawnmowerRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "201": {
+            "description": "Created: lawnmower successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LawnmowerResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: invalid input (name, address)"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}": {
+      "get": {
+        "tags": [
+          "Lawnmower"
+        ],
+        "summary": "Get lawnmower",
+        "description": "Get a lawnmower by ID (containing ID, name and address).",
+        "operationId": "GetLawnmower",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: data of lawnmower",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LawnmowerResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Lawnmower"
+        ],
+        "summary": "Update lawnmower",
+        "description": "Update a lawnmower by ID giving name and address.<br><br><br>The input is validated as follows:<ul><li>The `name` must be unique.</li><li>The `address` must be unique.</li><li>The `address` must be specified as an IP (IPv4) followed by the port (Format: `<IP>:<PORT>`, e.g. `192.168.1.42:5467`).</li></ul>",
+        "operationId": "UpdateLawnmower",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "lawnmowerRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LawnmowerRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "OK: lawnmower successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LawnmowerResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: invalid input (name, address)"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Lawnmower"
+        ],
+        "summary": "Delete lawnmower",
+        "description": "Delete a lawnmower permanently by ID.",
+        "operationId": "DeleteLawnmower",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "204": {
+            "description": "No Content: lawnmower successfully deleted"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/avatar": {
+      "get": {
+        "tags": [
+          "Avatar"
+        ],
+        "summary": "Get lawnmower avatar",
+        "description": "Get the avatar image of a lawnmower by ID.",
+        "operationId": "GetLawnmowerAvatar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: avatar image\nor\n"
+          },
+          "204": {
+            "description": "No Content: lawnmower with given ID has no avatar"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Avatar"
+        ],
+        "summary": "Upload lawnmower avatar",
+        "description": "Upload the avatar image of a lawnmower by ID (and overwrite the existing avatar).<br>The input is validated as follows:<ul><li>The file must have one of the following content types: PNG, JPEG, BMP.</li></ul>",
+        "operationId": "CreateLawnmowerAvatar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "201": {
+            "description": "Created: avatar successfully updated"
+          },
+          "400": {
+            "description": "Bad Request: invalid file (content type)"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Avatar"
+        ],
+        "summary": "Delete lawnmower avatar",
+        "description": "Delete the avatar image of a lawnmower by ID.",
+        "operationId": "DeleteLawnmowerAvatar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "204": {
+            "description": "No Content: avatar successfully deleted"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/battery/current": {
+      "get": {
+        "tags": [
+          "Battery"
+        ],
+        "summary": "Get current lawnmower battery",
+        "description": "Get the latest battery measurement of a lawnmower by ID (containing timestamp and battery level).",
+        "operationId": "GetCurrentBatteryMeasurement",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: data of battery measurement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatteryResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: no battery measurement found or lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/battery/history": {
+      "get": {
+        "tags": [
+          "Battery"
+        ],
+        "summary": "Get lawnmower battery history",
+        "description": "Get the battery measurements of a lawnmower by ID within a time frame (containing timestamp and battery level).",
+        "operationId": "GetBatteryMeasurementHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: list of battery measurements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BatteryResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/battery/import": {
+      "post": {
+        "tags": [
+          "Battery"
+        ],
+        "summary": "Import lawnmower battery measurements",
+        "description": "Import battery measurements for a lawnmower by ID (giving timestamp and battery level).",
+        "operationId": "ImportBatteryMeasurements",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "batteryImportRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatteryImportRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "OK: battery measurements successfully imported"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/gps/current": {
+      "get": {
+        "tags": [
+          "GPS"
+        ],
+        "summary": "Get current lawnmower GPS",
+        "description": "Get the latest GPS measurement of a lawnmower by ID (containing timestamp, latitude and longitude).",
+        "operationId": "GetCurrentGpsMeasurement",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: data of GPS measurement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GpsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: no gps measurement found or lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/gps/history": {
+      "get": {
+        "tags": [
+          "GPS"
+        ],
+        "summary": "Get lawnmower GPS history",
+        "description": "Get the GPS measurements of a lawnmower by ID within a time frame (containing timestamp, latitude and longitude).",
+        "operationId": "GetGpsMeasurementHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: list of GPS measurements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GpsResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/gps/import": {
+      "post": {
+        "tags": [
+          "GPS"
+        ],
+        "summary": "Import lawnmower GPS measurements",
+        "description": "Import GPS measurements for a lawnmower by ID (giving timestamp, latitude and longitude).",
+        "operationId": "ImportGpsMeasurements",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "gpsImportRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GpsImportRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "OK: GPS measurements successfully imported"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/state/current": {
+      "get": {
+        "tags": [
+          "State"
+        ],
+        "summary": "Get current lawnmower state",
+        "description": "Get the latest state measurement of a lawnmower by ID (containing timestamp, state id and state name).",
+        "operationId": "GetCurrentStateMeasurement",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: data of state measurement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: no state measurement found or lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/state/history": {
+      "get": {
+        "tags": [
+          "State"
+        ],
+        "summary": "Get lawnmower state history",
+        "description": "Get the state measurements of a lawnmower by ID within a time frame (containing timestamp, state id and state name).",
+        "operationId": "GetStateMeasurementHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: list of state measurements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StateResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/state/import": {
+      "post": {
+        "tags": [
+          "State"
+        ],
+        "summary": "Import lawnmower state measurements",
+        "description": "Import state measurements for a lawnmower by ID (giving timestamp and state id).",
+        "operationId": "ImportStateMeasurements",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "stateImportRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StateImportRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "OK: state measurements successfully imported"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/remote-control/ping": {
+      "get": {
+        "tags": [
+          "Remote Control"
+        ],
+        "summary": "Ping lawnmower",
+        "description": "Check the connection to the lawnmower (address) by ID.",
+        "operationId": "PingLawnmower",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: connection to the lawnmower successful"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          },
+          "503": {
+            "description": "Service Unavailable: connection to the lawnmower failed"
+          }
+        }
+      }
+    },
+    "/api/lawnmowers/{id}/remote-control/action/{action}": {
+      "post": {
+        "tags": [
+          "Remote Control"
+        ],
+        "summary": "Control lawnmower remotely",
+        "description": "Perform a remote action on a lawnmower by ID giving the action ID:<br><ul><li>0: START</li><li>1: STOP</li><li>2: HOME</li><li>3: ACK ERROR</li></ul>",
+        "operationId": "ControlLawnmower",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/RemoteControlAction"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: action successfully performed"
+          },
+          "400": {
+            "description": "Bad Request: invalid action in the current state of the lawnmower"
+          },
+          "404": {
+            "description": "Not Found: lawnmower with given ID not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LawnmowerResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        }
+      },
+      "LawnmowerRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        }
+      },
+      "BatteryResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "batteryLevel": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "BatteryImportRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "measurements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatteryImportDataSet"
+            }
+          }
+        }
+      },
+      "BatteryImportDataSet": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "batteryLevel": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "GpsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "GpsImportRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "measurements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GpsImportDataSet"
+            }
+          }
+        }
+      },
+      "GpsImportDataSet": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "StateResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "$ref": "#/components/schemas/LawnmowerState"
+          },
+          "stateName": {
+            "type": "string"
+          }
+        }
+      },
+      "LawnmowerState": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "StationCharging",
+          "StationChargingCompleted",
+          "Mowing",
+          "ReturningToStation",
+          "Paused",
+          "Error"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "StateImportRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "measurements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StateImportDataSet"
+            }
+          }
+        }
+      },
+      "StateImportDataSet": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "$ref": "#/components/schemas/LawnmowerState"
+          }
+        }
+      },
+      "RemoteControlAction": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Start",
+          "Stop",
+          "Home",
+          "AckError"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    }
+  }
+}

@@ -58,7 +58,7 @@ typeof window.api === "object"   // should be true (preload bridge)
 
 - `dev` → runs Angular dev server (port 4200), TypeScript watch for Electron, and launches Electron.
 - `build` → Angular production build → copies UI to `dist/ui` → compiles Electron TS → copies DB schema.
-- `start` → runs Electron against the **built** app (serves UI with Express).
+- `start` → runs Electron against the **built** app (serves UI with Express on port 3020).
 - `pack:*` → packages the app (outputs in `release/`).
 
 
@@ -68,7 +68,7 @@ typeof window.api === "object"   // should be true (preload bridge)
 
 ### Dev (HMR)
 - Angular: `http://localhost:4200/`
-- Electron loads that URL.
+- Electron loads via Express redirect on `http://127.0.0.1:3020/` (redirects to `http://localhost:4200/`).
 - Database: usa MySQL esterno (defaults VM/dev: `localhost:3306`, `root/ictskills`, DB `ictskills`).
 
 Start:
@@ -78,7 +78,7 @@ npm run dev
 
 ### Built (no packaging)
 - Angular static files are copied to `dist/ui`.
-- Electron starts **Express** and loads `http://127.0.0.1:<dynamicPort>/`.
+- Electron starts **Express** and loads `http://127.0.0.1:3020/` (falls back to a free port if 3020 is busy).
 
 Build & run:
 ```bash
@@ -118,7 +118,7 @@ npm start
 │  ├─ db/
 │  │  ├─ index.ts            # MySQL adapter + schema/seed
 │  │  ├─ utils.ts            # Scrypt helpers (hash/verify)
-│  │  └─ schema.mysql.sql    # DDL (users table, items, ...)
+│  │  └─ schema.mysql.sql    # DDL (users, sessions)
 │  └─ ipc/
 │     └─ auth.ts             # IPC handlers: 'auth:login', 'auth:logout'
 ├─ dist/                     # Compiled Electron + copied UI
@@ -137,10 +137,7 @@ npm start
 `electron/preload.ts` exposes a typed, minimal API:
 
 ```ts
-type Channel =
-  | "auth:login" | "auth:logout"
-  | "items:list" | "items:create" | "items:delete";
-
+type Channel = "auth:login" | "auth:logout" | "auth:register" | "auth:me" | "auth:last-remembered";
 contextBridge.exposeInMainWorld("api", {
   invoke: (channel: Channel, payload?: any) => ipcRenderer.invoke(channel, payload)
 });
@@ -162,7 +159,7 @@ Security defaults in `BrowserWindow`:
 
 - `auth:login` → `{ username, password }` → `{ ok, token?, user? }`
 - `auth:logout` → `{ token? }` → `{ ok }`
-- `items:list`, `items:create`, `items:delete` → (example CRUD; adjust to your entities)
+  
 
 Handlers are registered early in `main.ts` **before** any `loadURL()`.
 
@@ -199,7 +196,7 @@ Key points in `electron/server.ts`:
   ```
   (Do **not** use `"*"` with Express 5.)
 - Robust port selection:
-    - try `preferredPort` (3000), fallback to `0` (OS assigns a free port).
+    - try `preferredPort` (3020), fallback to `0` (OS assigns a free port).
 - `createExpressServer()` returns `{ url, server }` so `main.ts` can `loadURL(url)` and close the server on exit.
 
 ---

@@ -1,0 +1,59 @@
+<div class="container-fluid py-2">
+  <div class="d-flex align-items-center gap-3">
+    <!-- Messages -->
+    <div class="d-flex align-items-center gap-2 me-3" aria-live="polite">
+      <i class="bi bi-chat-dots" aria-hidden="true"></i>
+      <div>
+        <div class="small text-muted">Messages</div>
+        <div class="fw-semibold">
+          {{ totalMessages() }}
+          <span class="small text-muted ms-2">I {{ messageCounts().info }} • W {{ messageCounts().warn }} • E {{ messageCounts().error }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Battery -->
+    <div class="d-flex align-items-center gap-2 me-3" aria-live="polite">
+      <i class="bi"
+         [class.bi-battery-full]="(batteryLevel() ?? 0) >= 80"
+         [class.bi-battery-half]="(batteryLevel() ?? 0) >= 40 && (batteryLevel() ?? 0) < 80"
+         [class.bi-battery]="(batteryLevel() ?? 0) < 40"
+         aria-hidden="true"></i>
+      <div>
+        <div class="small text-muted">Battery</div>
+        <div [class.text-danger]="isBatteryLow()" class="fw-semibold">
+          @if (batteryLevel() !== null) {
+            {{ batteryLevel() | number:'1.0-0' }}%
+          } @else { — }
+          <span class="small text-muted ms-2">Low &lt; {{ batteryLowThreshold() }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- State -->
+    <div class="d-flex align-items-center gap-2" aria-live="polite">
+      <i class="bi" [class.bi-check-circle]="!isErrorState()" [class.bi-exclamation-octagon-fill]="isErrorState()" aria-hidden="true"></i>
+      <div>
+        <div class="small text-muted">State</div>
+        <div class="fw-semibold" [class.text-danger]="isErrorState()" [class.state-flash]="isErrorState()">
+          {{ stateName() }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Spacer -->
+    <div class="ms-auto"></div>
+
+    <!-- Live indicator (subtle) -->
+    <div class="d-flex align-items-center gap-2 small me-2">
+      @if (rt.isConnected()) {
+        <span class="text-success d-flex align-items-center gap-1"><span class="dot dot-ok"></span> Live</span>
+      } @else if (rt.isConnecting()) {
+        <span class="text-muted d-flex align-items-center gap-1"><span class="dot dot-warn"></span> Connecting…</span>
+      } @else {
+        <span class="text-secondary">Degraded</span>
+      }
+    </div>
+  </div>
+</div>
+

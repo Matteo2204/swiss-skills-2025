@@ -1,0 +1,11 @@
+.tick { fill: #212529; font-size: 12px; }
+.grid { stroke: #e9ecef; stroke-width: 1; }
+text.inside { fill: #ffffff; font-weight: 600; }
+
+.timeline { display: grid; gap: 6px; }
+.timeline-row { display: grid; grid-template-columns: 20px 1fr auto auto auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px dashed #e9ecef; }
+.timeline-row:last-child { border-bottom: 0; }
+.timeline .badge { width: 12px; height: 12px; border-radius: 2px; display: inline-block; border: 1px solid rgba(0,0,0,0.15); }
+.timeline .state-name { font-weight: 600; color: #212529; }
+.timeline .start, .timeline .end, .timeline .dur { color: #495057; font-variant-numeric: tabular-nums; }
+

@@ -38,7 +38,7 @@
    - Connect to external MySQL (env or defaults).
    - Ensure DB exists (best effort), apply schema (DDL executor tolerant to duplicates).
    - Lightweight migration: checks for `sessions.remember`, adds it if missing.
-2. Register IPC handlers (`auth`, `items`).
+2. Register IPC handlers (`auth`, `export`, `config`).
 3. Start renderer (Angular dev server or packaged Express).
 4. UI bootstraps:
    - Restores token from storage → validates via `auth:me`.
@@ -50,9 +50,7 @@
 - `auth:register` { username, password } → { ok | error }
 - `auth:me` { token } → { ok, user? }
 - `auth:last-remembered` → { ok, token?, user? }
-- `items:list` { token } → { ok, data }
-- `items:create` { token, name } → { ok, id? }
-- `items:delete` { token, id } → { ok }
+  
 
 ## Frontend UI
 - **Layout**: Sidebar (left) + main content; no topbar.
@@ -88,4 +86,4 @@
 - Add `.env.example` and optional `dotenv` for local overrides.
 - Optional: “Remember me” UX—explicit toggle state restore and visual indicator.
 - Optional: Docker compose for dev MySQL with root/ictskills pre-seeded.
-- Optional: E2E smoke tests (auth + items CRUD) against a test DB.
+- Optional: E2E smoke tests (auth flows) against a test DB.

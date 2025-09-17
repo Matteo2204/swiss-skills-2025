@@ -1,0 +1,93 @@
+<dialog #dlg class="config-dialog" (cancel)="$event.preventDefault()">
+  <div class="content" [class.is-busy]="busy()">
+    <header class="header d-flex align-items-center justify-content-between">
+      <h3 class="m-0">Configurazione</h3>
+      <button type="button" class="btn-close" (click)="close()" [disabled]="busy()" aria-label="Chiudi"></button>
+    </header>
+
+    <div class="body">
+      @if (showInvalidBanner()) {
+        <div class="alert alert-warning py-2" role="alert">
+          Config non valido, reimpostati i default
+        </div>
+      }
+
+      @if (mode() === 'view') {
+        <table class="table table-sm">
+          <tbody>
+          <tr><th scope="row">BaseUrl</th><td>{{ cfg.config().BaseUrl }}</td></tr>
+          <tr><th scope="row">LiveRangeSeconds</th><td>{{ cfg.config().LiveRangeSeconds }}</td></tr>
+          <tr><th scope="row">HistoryRangeHours</th><td>{{ cfg.config().HistoryRangeHours }}</td></tr>
+          <tr><th scope="row">BatteryLowThreshold</th><td>{{ cfg.config().BatteryLowThreshold }}</td></tr>
+          <tr><th scope="row">StuckThresholdMinutes</th><td>{{ cfg.config().StuckThresholdMinutes }}</td></tr>
+          <tr><th scope="row">RefreshIntervalSeconds</th><td>{{ cfg.config().RefreshIntervalSeconds }}</td></tr>
+          <tr><th scope="row">DefaultView</th><td>{{ cfg.config().DefaultView }}</td></tr>
+          </tbody>
+        </table>
+      }
+
+      @if (mode() === 'edit') {
+        <form (submit)="$event.preventDefault()">
+          <div class="mb-2">
+            <label class="form-label">BaseUrl</label>
+            <input type="text" class="form-control" [class.is-invalid]="!BaseUrl()" [ngModel]="BaseUrl()" name="baseUrl" (ngModelChange)="BaseUrl.set($event)" placeholder="http://10.211.55.3:3000" />
+            <div class="form-text">Esempio: http://http://10.211.55.3:3000</div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label">LiveRangeSeconds</label>
+              <input type="number" class="form-control" [min]="v.liveMin" [max]="v.liveMax" [class.is-invalid]="LiveRangeSeconds() < v.liveMin || LiveRangeSeconds() > v.liveMax" [ngModel]="LiveRangeSeconds()" name="live" (ngModelChange)="LiveRangeSeconds.set(+($event||0))" />
+              <div class="form-text">{{v.liveMin}}–{{v.liveMax}}</div>
+            </div>
+            <div class="col-6">
+              <label class="form-label">HistoryRangeHours</label>
+              <input type="number" class="form-control" [min]="v.histMin" [max]="v.histMax" [class.is-invalid]="HistoryRangeHours() < v.histMin || HistoryRangeHours() > v.histMax" [ngModel]="HistoryRangeHours()" name="hist" (ngModelChange)="HistoryRangeHours.set(+($event||0))" />
+              <div class="form-text">{{v.histMin}}–{{v.histMax}}</div>
+            </div>
+          </div>
+
+          <div class="row g-2 mt-2">
+            <div class="col-6">
+              <label class="form-label">BatteryLowThreshold</label>
+              <input type="number" class="form-control" [min]="v.batMin" [max]="v.batMax" [class.is-invalid]="BatteryLowThreshold() < v.batMin || BatteryLowThreshold() > v.batMax" [ngModel]="BatteryLowThreshold()" name="bat" (ngModelChange)="BatteryLowThreshold.set(+($event||0))" />
+              <div class="form-text">{{v.batMin}}–{{v.batMax}} %</div>
+            </div>
+            <div class="col-6">
+              <label class="form-label">StuckThresholdMinutes</label>
+              <input type="number" class="form-control" [min]="v.stuckMin" [max]="v.stuckMax" [class.is-invalid]="StuckThresholdMinutes() < v.stuckMin || StuckThresholdMinutes() > v.stuckMax" [ngModel]="StuckThresholdMinutes()" name="stuck" (ngModelChange)="StuckThresholdMinutes.set(+($event||0))" />
+              <div class="form-text">{{v.stuckMin}}–{{v.stuckMax}} min</div>
+            </div>
+          </div>
+
+          <div class="row g-2 mt-2">
+            <div class="col-6">
+              <label class="form-label">RefreshIntervalSeconds</label>
+              <input type="number" class="form-control" [min]="v.refreshMin" [max]="v.refreshMax" [class.is-invalid]="RefreshIntervalSeconds() < v.refreshMin || RefreshIntervalSeconds() > v.refreshMax" [ngModel]="RefreshIntervalSeconds()" name="refresh" (ngModelChange)="RefreshIntervalSeconds.set(+($event||0))" />
+              <div class="form-text">{{v.refreshMin}}–{{v.refreshMax}} s</div>
+            </div>
+            <div class="col-6">
+              <label class="form-label">DefaultView</label>
+              <select class="form-select" [ngModel]="DefaultView()" name="defView" (ngModelChange)="DefaultView.set($event)">
+                <option value="overview">overview</option>
+                <option value="battery">battery</option>
+                <option value="map">map</option>
+                <option value="messages">messages</option>
+                <option value="remote">remote</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      }
+    </div>
+
+    <footer class="footer d-flex justify-content-end gap-2">
+      @if (mode() === 'view') {
+        <button class="btn btn-primary" type="button" (click)="onEdit()">Edit</button>
+      } @else {
+        <button class="btn btn-outline-secondary" type="button" (click)="onCancelEdit()" [disabled]="busy()">Cancel</button>
+        <button class="btn btn-success" type="button" (click)="onSave()" [disabled]="busy() || hasInvalid()">Save</button>
+      }
+    </footer>
+  </div>
+</dialog>

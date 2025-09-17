@@ -1,0 +1,51 @@
+// Bootstrap theme overrides – restrict to the 6-color palette
+
+$greenbot: #7F8F3D; // primary
+$forest:   #228B22; // success
+$neon:     #39FF14; // info/accent
+$signal:   #F43333; // danger
+$coral:    #FF7979; // warning
+$fire:     #B22222; // secondary/dark
+
+// Base theme colors
+$primary:   $greenbot;
+$secondary: $fire;
+$success:   $forest;
+$info:      $neon;
+$warning:   $coral;
+$danger:    $signal;
+
+// Include light/dark in the theme map but keep within palette
+$light:     $coral; // constrained to provided palette
+$dark:      $fire;  // constrained to provided palette
+
+// Constrain Bootstrap’s theme color map to our palette only
+$theme-colors: (
+  "primary":   $primary,
+  "secondary": $secondary,
+  "success":   $success,
+  "info":      $info,
+  "warning":   $warning,
+  "danger":    $danger,
+  "light":     $light,
+  "dark":      $dark,
+);
+
+// Prevent generation of shaded/tinted button colors (hover/active = base)
+$btn-hover-bg-shade-amount: 0%;
+$btn-hover-bg-tint-amount: 0%;
+$btn-hover-border-shade-amount: 0%;
+$btn-hover-border-tint-amount: 0%;
+$btn-active-bg-shade-amount: 0%;
+$btn-active-bg-tint-amount: 0%;
+$btn-active-border-shade-amount: 0%;
+$btn-active-border-tint-amount: 0%;
+
+// Keep visuals simple; reduce non-palette effects
+$enable-gradients: false;
+$enable-shadows: false;
+
+// Avoid tinted alert backgrounds and borders
+$alert-bg-scale: 0%;
+$alert-border-scale: 0%;
+$alert-color-scale: 0%;

@@ -8,9 +8,10 @@ type Channel =
     | 'auth:register'
     | 'auth:last-remembered'
     | 'auth:me'
-    | 'items:list'
-    | 'items:create'
-    | 'items:delete';
+    | 'export:save-json'
+    | 'config:read'
+    | 'config:write'
+    | 'dialog:save-path';
 
 contextBridge.exposeInMainWorld('api', {
     invoke: <T = unknown>(channel: Channel, payload?: unknown) =>

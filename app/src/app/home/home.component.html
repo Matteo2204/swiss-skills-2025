@@ -1,6 +1,33 @@
-<div class="p-6 container">
-  <h2 class="text-xl font-bold mb-2">Dashboard</h2>
-  <p class="mb-2">Ruolo: {{ role() || '-' }}</p>
-  <button class="border p-2" (click)="logout()">Logout</button>
-  <a class="border p-2" [routerLink]="['/items']" style="margin-left:.5rem;">Vai a Items</a>
+<div class="container p-0">
+  <!-- Overview header (sticky to cockpit area) -->
+  <app-overview-header />
+
+  <div class="px-3 py-3">
+  <div class="d-flex align-items-center gap-3 mb-3">
+    <app-device-selector></app-device-selector>
+    <div class="text-muted" aria-live="polite">
+      @if (!ds.hasSelection()) {
+        Nessun dispositivo selezionato
+      } @else {
+        Selezionato: <strong>#{{ ds.selected()!.id }}</strong>
+      }
+    </div>
+    <div class="ms-auto">
+      <button class="btn btn-outline-secondary btn-sm" (click)="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Quick actions removed: usare la pagina Remote Control -->
+
+  <div class="mt-3">
+    <app-battery-trend />
+  </div>
+  <div class="mt-3">
+    <app-state-analytics />
+  </div>
+  <div class="mt-3">
+    <app-gps-map />
+  </div>
+  
+  </div>
 </div>

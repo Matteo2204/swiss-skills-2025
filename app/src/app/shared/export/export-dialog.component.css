@@ -1,0 +1,13 @@
+.export-dialog::backdrop { background: rgba(0,0,0,0.4); }
+.export-dialog { border: none; border-radius: 8px; width: 520px; padding: 0; }
+.content { padding: 16px 18px; }
+h3 { margin: 0 0 12px; font-size: 18px; }
+.mode-toggle { display: flex; gap: 16px; margin: 8px 0 12px; }
+.range { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; margin: 8px 0 6px; }
+.range label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.hint { color: #666; }
+.error { color: #b00020; margin-top: 6px; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+button { padding: 6px 12px; }
+.primary { background: #1976d2; color: #fff; border: none; border-radius: 4px; }
+

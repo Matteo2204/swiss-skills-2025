@@ -1,0 +1,46 @@
+<div class="card" aria-label="Messages" role="region">
+  <div class="card-header d-flex align-items-center gap-2">
+    <div class="fw-semibold">Messages</div>
+    <div class="ms-auto d-flex align-items-center gap-2" aria-label="Filter categories">
+      <div class="btn-group" role="group" aria-label="Severity filter">
+        <input type="checkbox" class="btn-check" id="filter-info" [checked]="showInfo()" (change)="showInfo.set($any($event.target).checked)">
+        <label class="btn btn-outline-primary btn-sm" for="filter-info" title="Info"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Info <span class="badge text-bg-primary ms-1">{{ engine.countsComputed().info }}</span></label>
+
+        <input type="checkbox" class="btn-check" id="filter-warn" [checked]="showWarn()" (change)="showWarn.set($any($event.target).checked)">
+        <label class="btn btn-outline-warning btn-sm" for="filter-warn" title="Warnings"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Warn <span class="badge text-bg-warning ms-1">{{ engine.countsComputed().warn }}</span></label>
+
+        <input type="checkbox" class="btn-check" id="filter-error" [checked]="showError()" (change)="showError.set($any($event.target).checked)">
+        <label class="btn btn-outline-danger btn-sm" for="filter-error" title="Errors"><i class="bi bi-x-octagon me-1" aria-hidden="true"></i>Error <span class="badge text-bg-danger ms-1">{{ engine.countsComputed().error }}</span></label>
+      </div>
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="onClear()" title="Clear all" aria-label="Clear all messages">
+        <i class="bi bi-trash3" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div #viewport class="msg-viewport" role="log" aria-live="polite" aria-relevant="additions" (scroll)="onScroll($event)" [attr.data-virtual]="useVirtual() ? '1' : '0'" (window:resize)="onViewport(viewport)" [attr.aria-busy]="false">
+      <!-- Virtualized rendering when > 500 -->
+      @if (useVirtual()) {
+        <div class="msg-spacer" [style.height.px]="totalHeight()"></div>
+        <div class="msg-virtual" [style.transform]="'translateY(' + translateY() + 'px)'">
+          <ng-container *ngFor="let m of slice(); trackBy: trackById">
+            <div class="msg-row" role="listitem" [class.msg-info]="m.category==='info'" [class.msg-warn]="m.category==='warn'" [class.msg-error]="m.category==='error'">
+              <div class="msg-badge" [attr.aria-label]="m.category">{{ m.category | uppercase }}</div>
+              <div class="msg-text">{{ m.text }}</div>
+              <div class="msg-ts">{{ m.ts | date:'short' }}</div>
+            </div>
+          </ng-container>
+        </div>
+      } @else {
+        <div role="list">
+          <div *ngFor="let m of filtered(); trackBy: trackById" class="msg-row" role="listitem" [class.msg-info]="m.category==='info'" [class.msg-warn]="m.category==='warn'" [class.msg-error]="m.category==='error'">
+            <div class="msg-badge" [attr.aria-label]="m.category">{{ m.category | uppercase }}</div>
+            <div class="msg-text">{{ m.text }}</div>
+            <div class="msg-ts">{{ m.ts | date:'short' }}</div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

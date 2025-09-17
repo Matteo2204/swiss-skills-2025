@@ -1,0 +1,100 @@
+<div class="container p-0">
+  <!-- Sticky overview header for live state/status -->
+  <app-overview-header />
+
+  <div class="px-3 py-3">
+    <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+      <app-device-selector></app-device-selector>
+      <div class="text-muted" aria-live="polite">
+        @if (!ds.hasSelection()) { Nessun dispositivo selezionato }
+        @else { Selezionato: <strong>#{{ ds.selected()!.id }}</strong> }
+      </div>
+      <div class="ms-auto d-flex align-items-center gap-2" aria-live="polite">
+        @if (deviceOnline() === false) {
+          <span class="badge text-bg-danger">Device offline</span>
+        } @else if (deviceOnline() === true) {
+          <span class="badge text-bg-success">Device online</span>
+        }
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <span>Remote Control</span>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  (click)="onPing()"
+                  [disabled]="!ds.hasSelection() || busyPing()">
+            @if (!busyPing()) {
+              <i class="bi bi-wifi me-1" aria-hidden="true"></i>Ping device
+            } @else {
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              <span>Ping…</span>
+            }
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <!-- START -->
+          <button type="button"
+                  class="btn btn-primary"
+                  (click)="onAction(RemoteControlAction.Start, 'START')"
+                  [disabled]="actionsGloballyDisabled() || !canStart() || busyAction() !== null">
+            @if (busyAction() === RemoteControlAction.Start) {
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              <span>Invio…</span>
+            } @else {
+              <i class="bi bi-play-fill me-1" aria-hidden="true"></i>Start
+            }
+          </button>
+
+          <!-- STOP -->
+          <button type="button"
+                  class="btn btn-secondary"
+                  (click)="onAction(RemoteControlAction.Stop, 'STOP')"
+                  [disabled]="actionsGloballyDisabled() || !canStop() || busyAction() !== null">
+            @if (busyAction() === RemoteControlAction.Stop) {
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              <span>Invio…</span>
+            } @else {
+              <i class="bi bi-stop-fill me-1" aria-hidden="true"></i>Stop
+            }
+          </button>
+
+          <!-- HOME -->
+          <button type="button"
+                  class="btn btn-outline-primary"
+                  (click)="onAction(RemoteControlAction.Home, 'HOME')"
+                  [disabled]="actionsGloballyDisabled() || !canHome() || busyAction() !== null">
+            @if (busyAction() === RemoteControlAction.Home) {
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              <span>Invio…</span>
+            } @else {
+              <i class="bi bi-house-door-fill me-1" aria-hidden="true"></i>Home
+            }
+          </button>
+
+          <!-- ACK ERROR -->
+          <button type="button"
+                  class="btn btn-outline-danger"
+                  (click)="onAction(RemoteControlAction.AckError, 'ACK ERROR')"
+                  [disabled]="actionsGloballyDisabled() || !canAckError() || busyAction() !== null">
+            @if (busyAction() === RemoteControlAction.AckError) {
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              <span>Invio…</span>
+            } @else {
+              <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Ack error
+            }
+          </button>
+        </div>
+
+        <div class="form-text mt-2">
+          Nessun aggiornamento ottimistico: lo stato si aggiorna solo dai dati live.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

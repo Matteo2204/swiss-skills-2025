@@ -1,22 +1,34 @@
-import {Component, computed, effect, inject, signal} from '@angular/core';
+import {Component, Injector, ViewChild, computed, effect, inject, signal} from '@angular/core';
 import {Router, RouterOutlet} from '@angular/router';
 import {AuthService} from './core/auth.service';
 import {Role} from '@shared/models';
 import {Crumb} from '@shared/topbar/topbar.component';
 import {SidebarComponent, SideNavItem, SideUser, TopbarAction} from '@shared/sidebar/sidebar.component';
+import {StatusbarComponent} from '@shared/statusbar/statusbar.component';
+import {ElementRef} from '@angular/core';
+import {ConfigDialogComponent} from '@shared/config/config-dialog.component';
+import {AppConfigService} from './core/app-config.service';
+import {RealtimeService} from '@shared/services/realtime.service';
+import {ImportDialogComponent} from '@shared/import/import-dialog.component';
 
-type SideItemId = 'home' | 'items' | 'reports' | string;
-type TopActionId = 'new' | 'export' | string;
+type SideItemId = 'home' | 'reports' | string;
+type TopActionId = 'import' | 'export' | string;
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SidebarComponent],
+  imports: [RouterOutlet, SidebarComponent, StatusbarComponent, ConfigDialogComponent, ImportDialogComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
+  @ViewChild('cfgDlg', { static: false }) cfgDlg?: ConfigDialogComponent;
+  @ViewChild('importDlg', { static: false }) importDlg?: ImportDialogComponent;
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+  private readonly appCfg = inject(AppConfigService);
+  // Wire realtime so it starts observing selection and connection state
+  readonly rt = inject(RealtimeService);
+  private readonly injector = inject(Injector);
 
   // stato UI
   readonly isCollapsed = signal<boolean>(false);
@@ -36,8 +48,9 @@ export class App {
   readonly items = computed<SideNavItem[]>(() => {
     if (!this.isLoggedIn()) return [];
     const base: SideNavItem[] = [
-      { id: 'home',  label: 'Home',  icon: 'bi bi-house',   route: '/' },
-      { id: 'items', label: 'Items', icon: 'bi bi-archive', route: '/items' },
+      { id: 'home',            label: 'Home',            icon: 'bi bi-house',     route: '/' },
+      { id: 'remote-control',  label: 'Remote Control',  icon: 'bi bi-joystick',  route: '/remote-control' },
+      { id: 'messages',        label: 'Messages',        icon: 'bi bi-chat-dots', route: '/messages' },
     ];
     return this.auth.role() === Role.ADMIN
       ? [...base]
@@ -45,7 +58,7 @@ export class App {
   });
 
   readonly actions = signal<TopbarAction[]>([
-    { id: 'new',    label: 'New',    icon: 'bi bi-plus-lg',      variant: 'primary' },
+    { id: 'import', label: 'Import', icon: 'bi bi-file-earmark-arrow-up', variant: 'outline-secondary' },
   ]);
 
   constructor() {
@@ -55,7 +68,7 @@ export class App {
           const url = this.router.url;
           if (!url.startsWith('/login')) void this.router.navigateByUrl('/login');
         }
-      });
+      }, { injector: this.injector });
     });
   }
 
@@ -68,7 +81,7 @@ export class App {
   }
   onTopAction(id: TopActionId) {
     switch (id) {
-      case 'new':    void this.router.navigateByUrl('/items/new'); break;
+      case 'import': this.importDlg?.open(); break;
       case 'export': this.exportCurrentView(); break;
     }
   }
@@ -76,5 +89,11 @@ export class App {
 
   private exportCurrentView(): void {
 
+  }
+
+  onStatusbarDblClick(): void {
+    // Ensure service is initialized (injected in ctor already)
+    // Open the dialog
+    this.cfgDlg?.open();
   }
 }
