@@ -88,7 +88,7 @@ export class AppConfigService {
 // Defaults and clamps
 function defaults(): AppConfig {
   return {
-    BaseUrl: 'http://10.211.55.3:3000',
+    BaseUrl: 'http://localhost:3000',
     LiveRangeSeconds: 300,
     HistoryRangeHours: 24,
     BatteryLowThreshold: 10,

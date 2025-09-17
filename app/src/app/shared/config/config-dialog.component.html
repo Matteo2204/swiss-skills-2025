@@ -30,8 +30,8 @@
         <form (submit)="$event.preventDefault()">
           <div class="mb-2">
             <label class="form-label">BaseUrl</label>
-            <input type="text" class="form-control" [class.is-invalid]="!BaseUrl()" [ngModel]="BaseUrl()" name="baseUrl" (ngModelChange)="BaseUrl.set($event)" placeholder="http://10.211.55.3:3000" />
-            <div class="form-text">Example: http://http://10.211.55.3:3000</div>
+            <input type="text" class="form-control" [class.is-invalid]="!BaseUrl()" [ngModel]="BaseUrl()" name="baseUrl" (ngModelChange)="BaseUrl.set($event)" placeholder="http://localhost:3000" />
+            <div class="form-text">Example: http://localhost:3000</div>
           </div>
 
           <div class="row g-2">

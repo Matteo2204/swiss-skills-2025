@@ -10,8 +10,8 @@ WARNING: Questo file è la fonte di verità. Ogni prompt Codex deve leggerlo pri
 - Invarianti: non cambiare stack/build/pipeline/CSP/routing esistenti.
 
 2) Backend runtime (URL, Swagger, Realtime)
-- Base URL: http://http://10.211.55.3:3000
-- Swagger UI: http://http://10.211.55.3:3000/swagger
+- Base URL: http://localhost:3000
+- Swagger UI: http://localhost:3000/swagger
 - Servizi: LawnmowerAPI (REST) + LawnmowerHub (SignalR).
 - Solo HTTP/SignalR: nessun altro trasporto; niente IPC per rete.
 - Realtime/polling: usare SignalR per live; se disconnesso, fallback a polling HTTP con intervallo = `RefreshInterval` (config), retry allo stesso intervallo.

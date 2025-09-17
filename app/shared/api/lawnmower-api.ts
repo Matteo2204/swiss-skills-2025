@@ -6,8 +6,8 @@
 // Configuration & Utilities
 // ==========================
 
-// Default per CONTEXT.md: backend runs on http://10.211.55.3:3000
-export let BASE_URL = 'http://http://10.211.55.3:3000';
+// Default per CONTEXT.md: backend runs on http://localhost:3000
+export let BASE_URL = 'http://localhost:3000';
 
 export function overrideBaseUrl(url: string): void {
   // Normalize by trimming trailing slashes
@@ -301,7 +301,7 @@ export async function remoteAction(id: number, action: RemoteControlAction): Pro
 /*
 export async function smokeTest(): Promise<void> {
   // Adjust base URL if needed
-  // overrideBaseUrl('http://http://10.211.55.3:3000');
+  // overrideBaseUrl('http://localhost:3000');
 
   // Lawn mowers
   const list = await getLawnmowers();
