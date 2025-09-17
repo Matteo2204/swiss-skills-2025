@@ -1,24 +1,24 @@
 <div class="card">
   <div class="card-header d-flex align-items-center gap-2 flex-wrap">
-    <div class="fw-semibold">Distribuzione stato + Timeline</div>
+    <div class="fw-semibold">State distribution + Timeline</div>
     <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
-      <label class="form-label m-0 small" for="fromInput">Da</label>
+      <label class="form-label m-0 small" for="fromInput">From</label>
       <input id="fromInput" class="form-control form-control-sm" type="datetime-local" [value]="fromInput()" (change)="fromInput.set(($any($event.target)).value)" />
-      <label class="form-label m-0 small" for="toInput">A</label>
+      <label class="form-label m-0 small" for="toInput">To</label>
       <input id="toInput" class="form-control form-control-sm" type="datetime-local" [value]="toInput()" (change)="toInput.set(($any($event.target)).value)" />
       <button class="btn btn-sm btn-outline-primary" (click)="reload()" [disabled]="isLoading() || !fromInput() || !toInput()">
         @if (isLoading()) { <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> }
-        Ricarica
+        Refresh
       </button>
     </div>
   </div>
   <div class="card-body">
     @if (error() === '404' || !hasData()) {
-      <div class="text-muted" role="status">Nessuna misura nel periodo</div>
+      <div class="text-muted" role="status">No measurements in the period</div>
     } @else {
       <!-- Distribution chart (SVG inline, horizontal bars) -->
       <div class="mb-3">
-        <svg [attr.width]="svgBars().width" [attr.height]="svgBars().height" role="img" aria-label="Distribuzione percentuale per stato">
+        <svg [attr.width]="svgBars().width" [attr.height]="svgBars().height" role="img" aria-label="Percentage distribution by state">
           <g *ngFor="let b of svgBars().bars; trackBy: trackByIdx">
             <!-- Label area on the left -->
             <text [attr.x]="padding.left - 8" [attr.y]="b.y + b.h/2 + 4" text-anchor="end" class="tick">{{ b.stateName }}</text>
@@ -54,7 +54,7 @@
     }
 
     @if (error() && error() !== '404') {
-      <div class="text-danger small mt-2">Errore: {{ error() }}</div>
+      <div class="text-danger small mt-2">Error: {{ error() }}</div>
     }
   </div>
 </div>

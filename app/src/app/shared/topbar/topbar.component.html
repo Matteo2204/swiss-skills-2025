@@ -2,7 +2,7 @@
   @if (logo()) { <img [ngSrc]="logo()!" width="24" height="24" alt="" /> }
   <strong class="me-auto">{{ title() }}</strong>
 
-  <!-- Nav items orizzontali (opzionali) -->
+  <!-- Optional horizontal nav items -->
   @if (items()?.length) {
     <nav class="d-flex align-items-center gap-2 me-3">
       @for (it of items()!; track it.id) {
@@ -51,7 +51,7 @@
   }
 </div>
 
-<!-- Breadcrumbs (opzionali) -->
+<!-- Breadcrumbs (optional) -->
 @if (breadcrumbs()?.length) {
   <div class="px-3 py-2 border-top bg-light">
     <nav aria-label="breadcrumb">

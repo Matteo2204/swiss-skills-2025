@@ -4,7 +4,7 @@
   "private": true,
   "main": "dist/main.js",
   "author": "Matteo Galassini",
-  "description": "Skill09 App - Angular + Electron + MySQL",
+  "description": "Cockpit - Green Mower",
   "scripts": {
     "dev": "concurrently -k -n ANG,TSC,ELEC \"npm run dev:angular\" \"npm run build:electron:watch\" \"npm run run:electron\"",
     "dev:angular": "npm --prefix app run start -- --port 4200 --open=false",
@@ -42,7 +42,8 @@
   },
   "build": {
     "appId": "com.galassini.skill09",
-    "productName": "Skill09App",
+    "productName": "Cockpit - Green Mower",
+    "icon": "logo/img.png",
     "directories": { "app": ".", "output": "release" },
     "files": ["dist/**/*",
       "electron/db/schema.mysql.sql",
@@ -53,8 +54,8 @@
     "mac": { "target": ["dmg","zip"], "category": "public.app-category.utilities" },
     "win": { "target": ["zip"] },
     "dmg": {
-      "title": "Skill09App-${version}-${arch}",
-      "artifactName": "Skill09App-${version}-${arch}.${ext}"
+      "title": "Cockpit-Green-Mower-${version}-${arch}",
+      "artifactName": "Cockpit-Green-Mower-${version}-${arch}.${ext}"
     }
   }
 }

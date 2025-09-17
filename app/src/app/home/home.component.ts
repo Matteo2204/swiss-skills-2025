@@ -1,4 +1,4 @@
-import {Component, computed, inject} from '@angular/core';
+import {Component, computed, inject, signal} from '@angular/core';
 import {DeviceSelectorComponent} from '@shared/device-selector/device-selector.component';
 import {OverviewHeaderComponent} from '@shared/overview-header/overview-header.component';
 import {DeviceSelectionService} from '@shared/services/device-selection.service';
@@ -19,6 +19,9 @@ export class HomeComponent {
   readonly ds = inject(DeviceSelectionService);
 
   role = computed(() => this.auth.role());
+
+  // Tabs: 'map' | 'battery' | 'status'
+  readonly tab = signal<'map' | 'battery' | 'status'>('map');
 
   async logout() { await this.auth.logout(); }
 

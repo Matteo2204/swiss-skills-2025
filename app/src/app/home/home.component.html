@@ -7,9 +7,9 @@
     <app-device-selector></app-device-selector>
     <div class="text-muted" aria-live="polite">
       @if (!ds.hasSelection()) {
-        Nessun dispositivo selezionato
+        No device selected
       } @else {
-        Selezionato: <strong>#{{ ds.selected()!.id }}</strong>
+        Selected: <strong>#{{ ds.selected()!.id }}</strong>
       }
     </div>
     <div class="ms-auto">
@@ -17,16 +17,37 @@
     </div>
   </div>
 
-  <!-- Quick actions removed: usare la pagina Remote Control -->
+  <!-- Quick actions removed: use the Remote Control page -->
 
-  <div class="mt-3">
-    <app-battery-trend />
-  </div>
-  <div class="mt-3">
-    <app-state-analytics />
-  </div>
-  <div class="mt-3">
-    <app-gps-map />
+  <!-- Tabs: Map | Battery | Status -->
+  <ul class="nav nav-tabs mt-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button type="button" class="nav-link" [class.active]="tab() === 'map'" (click)="tab.set('map')" role="tab" [attr.aria-selected]="tab() === 'map'">Map</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button type="button" class="nav-link" [class.active]="tab() === 'battery'" (click)="tab.set('battery')" role="tab" [attr.aria-selected]="tab() === 'battery'">Battery</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button type="button" class="nav-link" [class.active]="tab() === 'status'" (click)="tab.set('status')" role="tab" [attr.aria-selected]="tab() === 'status'">Status</button>
+    </li>
+  </ul>
+
+  <div class="tab-content pt-3">
+    @if (tab() === 'map') {
+      <div class="tab-pane fade show active" role="tabpanel">
+        <app-gps-map />
+      </div>
+    }
+    @if (tab() === 'battery') {
+      <div class="tab-pane fade show active" role="tabpanel">
+        <app-battery-trend />
+      </div>
+    }
+    @if (tab() === 'status') {
+      <div class="tab-pane fade show active" role="tabpanel">
+        <app-state-analytics />
+      </div>
+    }
   </div>
   
   </div>

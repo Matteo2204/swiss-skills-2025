@@ -20,12 +20,12 @@
     @if (activeTab() === 'latest') {
       <div class="d-flex align-items-center justify-content-between mb-2">
         <div class="small text-muted">Live (1 Hz)</div>
-        <div class="small text-muted">Punti: {{ livePoints().length }}</div>
+        <div class="small text-muted">Points: {{ livePoints().length }}</div>
       </div>
 
       <div class="map-wrap">
         <svg class="map-svg" [attr.viewBox]="'0 0 ' + vbWidth + ' ' + vbHeight" [attr.width]="vbWidth" [attr.height]="vbHeight" preserveAspectRatio="xMidYMid meet"
-             role="img" aria-label="Percorso GPS (live)" (mousemove)="onSvgMove($event, 'latest')" (mouseleave)="onSvgLeave()">
+             role="img" aria-label="GPS path (live)" (mousemove)="onSvgMove($event, 'latest')" (mouseleave)="onSvgLeave()">
           <defs>
             <clipPath id="avatarClip">
               <circle r="10" cx="0" cy="0"></circle>
@@ -65,7 +65,7 @@
       </div>
 
       @if (livePoints().length === 0 && !latestFallback()) {
-        <div class="placeholder">Nessun dato GPS nel periodo</div>
+        <div class="placeholder">No GPS data in the period</div>
       }
     } @else {
       <!-- History -->
@@ -81,20 +81,20 @@
         <div class="col-auto">
           <button type="button" class="btn btn-primary btn-sm" (click)="reloadHistory()" [disabled]="isLoadingHistory() || !ds.hasSelection()">
             @if (isLoadingHistory()) { <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> }
-            Aggiorna
+            Refresh
           </button>
         </div>
         <div class="col small text-muted" aria-live="polite">
-          @if (historyPoints() !== null) { {{ historyPoints()?.length ?? 0 }} misure caricate. }
+          @if (historyPoints() !== null) { {{ historyPoints()?.length ?? 0 }} measurements loaded. }
         </div>
       </div>
 
       @if (historyError() === '404') {
-        <div class="placeholder">Nessun dato GPS nel periodo</div>
+        <div class="placeholder">No GPS data in the period</div>
       } @else {
         <div class="map-wrap">
           <svg class="map-svg" [attr.viewBox]="'0 0 ' + vbWidth + ' ' + vbHeight" [attr.width]="vbWidth" [attr.height]="vbHeight" preserveAspectRatio="xMidYMid meet"
-               role="img" aria-label="Percorso GPS (storico)" (mousemove)="onSvgMove($event, 'history')" (mouseleave)="onSvgLeave()">
+               role="img" aria-label="GPS path (history)" (mousemove)="onSvgMove($event, 'history')" (mouseleave)="onSvgLeave()">
             <!-- background -->
             <rect x="0" y="0" [attr.width]="vbWidth" [attr.height]="vbHeight" class="bg" />
             <!-- border -->

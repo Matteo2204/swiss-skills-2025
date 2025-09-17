@@ -26,11 +26,13 @@ export async function createExpressServer(
     // CSP semplice
     const csp = [
         "default-src 'self'",
-        "script-src 'self'",
+        // Allow inline handlers used by Angular to lazy-load CSS (<link onload=…> pattern)
+        "script-src 'self' 'unsafe-inline'",
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: blob:",
         "font-src 'self' data:",
-        "connect-src 'self'",
+        // Allow local HTTP server only; extend if backend runs elsewhere
+        "connect-src 'self' http: https: ws: wss:",
         "media-src 'self'",
         "object-src 'none'",
         "frame-ancestors 'none'",

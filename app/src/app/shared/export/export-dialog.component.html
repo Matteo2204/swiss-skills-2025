@@ -1,6 +1,6 @@
 <dialog #dlg class="export-dialog">
   <form method="dialog" class="content" (submit)="$event.preventDefault()">
-    <h3>Export dati</h3>
+    <h3>Export Data</h3>
 
     <div class="mode-toggle">
       <label>
@@ -18,16 +18,16 @@
       <label>To
         <input type="datetime-local" [value]="toInput()" (change)="toInput.set(($any($event.target)).value)">
       </label>
-      <small class="hint">Default: ultime {{DEFAULT_HISTORY_RANGE_H}} ore.</small>
+      <small class="hint">Default: last {{DEFAULT_HISTORY_RANGE_H}} hours.</small>
     </div>
 
     <div class="error" *ngIf="error()">{{ error() }}</div>
 
     <div class="actions">
-      <button type="button" (click)="onClose()" [disabled]="busy()">Annulla</button>
+      <button type="button" (click)="onClose()" [disabled]="busy()">Cancel</button>
       <button type="button" class="primary" (click)="onExport()" [disabled]="!canExport()">
-        <span *ngIf="!busy()">Esporta</span>
-        <span *ngIf="busy()">Esportazione…</span>
+        <span *ngIf="!busy()">Export</span>
+        <span *ngIf="busy()">Exporting…</span>
       </button>
     </div>
   </form>

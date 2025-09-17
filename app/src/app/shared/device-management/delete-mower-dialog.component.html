@@ -1,21 +1,20 @@
 <dialog #dlg (cancel)="$event.preventDefault()" class="app-modal">
   <div class="modal-content">
     <header class="modal-header d-flex align-items-center justify-content-between">
-      <h2 class="h5 m-0 text-danger">Elimina dispositivo</h2>
-      <button type="button" class="btn-close" aria-label="Chiudi" (click)="onCancel()"></button>
+      <h2 class="h5 m-0 text-danger">Delete device</h2>
+      <button type="button" class="btn-close" aria-label="Close" (click)="onCancel()"></button>
     </header>
     <div class="modal-body">
-      <p>Sei sicuro di voler eliminare il dispositivo <strong>{{ mower()?.name }}</strong>? L'operazione è irreversibile.</p>
+      <p>Are you sure you want to delete the device <strong>{{ mower()?.name }}</strong>? This action is irreversible.</p>
       @if (error()) {
         <div class="alert alert-danger py-2" role="alert">{{ error() }}</div>
       }
     </div>
     <footer class="modal-footer d-flex justify-content-end gap-2">
-      <button type="button" class="btn btn-outline-secondary" (click)="onCancel()" [disabled]="busy()">Annulla</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="onCancel()" [disabled]="busy()">Cancel</button>
       <button type="button" class="btn btn-danger" (click)="onConfirm()" [disabled]="busy()">
-        <i class="bi bi-trash" aria-hidden="true"></i> Elimina
+        <i class="bi bi-trash" aria-hidden="true"></i> Delete
       </button>
     </footer>
   </div>
 </dialog>
-

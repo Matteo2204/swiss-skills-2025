@@ -1,18 +1,18 @@
 <dialog #dlg (cancel)="$event.preventDefault()" class="app-modal">
   <div class="modal-content" [class.is-busy]="busy()">
     <header class="modal-header d-flex align-items-center justify-content-between">
-      <h2 class="h5 m-0">Importa dati</h2>
-      <button type="button" class="btn-close" aria-label="Chiudi" (click)="onClose()"></button>
+      <h2 class="h5 m-0">Import Data</h2>
+      <button type="button" class="btn-close" aria-label="Close" (click)="onClose()"></button>
     </header>
 
     <div class="modal-body">
       <div class="mb-3">
-        <label class="form-label">File JSON</label>
+        <label class="form-label">JSON file</label>
         <div class="d-flex align-items-center gap-2">
           <input #fileInput id="importFile" type="file" accept="application/json,.json" class="form-control" (change)="onFileChosen($event)">
           @if (fileName()) { <span class="text-muted">{{ fileName() }}</span> }
         </div>
-        <div class="form-text">Il file può contenere le sezioni battery, gps, state.</div>
+        <div class="form-text">The file may contain the battery, gps, state sections.</div>
       </div>
 
       @if (error()) {
@@ -21,26 +21,26 @@
 
       @if (summary()) {
         <div class="mt-3">
-          <h3 class="h6">Sommario import</h3>
+          <h3 class="h6">Import summary</h3>
           <ul class="list-unstyled mb-0">
             @if (summary()!.battery) {
               <li>
-                <strong>Batteria:</strong>
-                {{ summary()!.battery!.valid }} importati, {{ summary()!.battery!.invalid }} invalidi
+                <strong>Battery:</strong>
+                {{ summary()!.battery!.valid }} imported, {{ summary()!.battery!.invalid }} invalid
                 @if (summary()!.battery!.error) { <span class="text-danger">— {{ summary()!.battery!.error }}</span> }
               </li>
             }
             @if (summary()!.gps) {
               <li>
                 <strong>GPS:</strong>
-                {{ summary()!.gps!.valid }} importati, {{ summary()!.gps!.invalid }} invalidi
+                {{ summary()!.gps!.valid }} imported, {{ summary()!.gps!.invalid }} invalid
                 @if (summary()!.gps!.error) { <span class="text-danger">— {{ summary()!.gps!.error }}</span> }
               </li>
             }
             @if (summary()!.state) {
               <li>
-                <strong>Stato:</strong>
-                {{ summary()!.state!.valid }} importati, {{ summary()!.state!.invalid }} invalidi
+                <strong>State:</strong>
+                {{ summary()!.state!.valid }} imported, {{ summary()!.state!.invalid }} invalid
                 @if (summary()!.state!.error) { <span class="text-danger">— {{ summary()!.state!.error }}</span> }
               </li>
             }
@@ -50,11 +50,10 @@
     </div>
 
     <footer class="modal-footer d-flex justify-content-end gap-2">
-      <button type="button" class="btn btn-outline-secondary" (click)="onClose()" [disabled]="busy()">Chiudi</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="onClose()" [disabled]="busy()">Close</button>
       <button type="button" class="btn btn-primary" (click)="onImport()" [disabled]="busy() || !canImport()">
-        <i class="bi bi-upload me-1" aria-hidden="true"></i>Importa
+        <i class="bi bi-upload me-1" aria-hidden="true"></i>Import
       </button>
     </footer>
   </div>
 </dialog>
-

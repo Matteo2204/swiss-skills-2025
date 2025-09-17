@@ -42,7 +42,7 @@
       </div>
 
       <div class="small text-muted mt-2" aria-live="polite">
-        {{ livePoints().length }} misure nella finestra live.
+        {{ livePoints().length }} measurements in the live window.
       </div>
     } @else {
       <!-- History -->
@@ -65,24 +65,24 @@
         <div class="col-auto">
           <button type="button" class="btn btn-primary btn-sm" (click)="reloadHistory()" [disabled]="isLoadingHistory() || !ds.hasSelection()">
             @if (isLoadingHistory()) { <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> }
-            Aggiorna
+            Refresh
           </button>
         </div>
         <div class="col small text-muted" aria-live="polite">
           @if (historyPoints() !== null) {
-            {{ historyPoints()?.length ?? 0 }} misure caricate.
+            {{ historyPoints()?.length ?? 0 }} measurements loaded.
           }
         </div>
       </div>
 
       @if (historyError() === '404') {
-        <div class="placeholder">Nessuna misura nel periodo</div>
+        <div class="placeholder">No measurements in the period</div>
       } @else {
         <div class="chart-wrap" [style.width.px]="width" [style.height.px]="height">
           <canvas #chartCanvas [attr.width]="width" [attr.height]="height" role="img" aria-label="Battery history over time"></canvas>
         </div>
         <div class="small mt-2" aria-live="polite">
-          <span class="text-muted me-2">Stima:</span>
+          <span class="text-muted me-2">Estimate:</span>
           <strong>{{ estimationText() }}</strong>
         </div>
       }

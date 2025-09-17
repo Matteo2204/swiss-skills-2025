@@ -1,8 +1,8 @@
 <dialog #dlg (cancel)="$event.preventDefault()" class="app-modal">
   <form method="dialog" (submit)="onSubmit()" class="modal-content" [class.is-busy]="busy()">
     <header class="modal-header d-flex align-items-center justify-content-between">
-      <h2 class="h5 m-0">{{ mode() === 'create' ? 'Aggiungi dispositivo' : 'Modifica dispositivo' }}</h2>
-      <button type="button" class="btn-close" aria-label="Chiudi" (click)="onClose()"></button>
+      <h2 class="h5 m-0">{{ mode() === 'create' ? 'Add device' : 'Edit device' }}</h2>
+      <button type="button" class="btn-close" aria-label="Close" (click)="onClose()"></button>
     </header>
 
     <div class="modal-body d-flex gap-3">
@@ -18,11 +18,11 @@
         </div>
         <div class="d-grid gap-2 mt-2">
           <label class="btn btn-outline-secondary btn-sm" for="avatarInput">
-            <i class="bi bi-upload" aria-hidden="true"></i> Carica avatar
+            <i class="bi bi-upload" aria-hidden="true"></i> Upload avatar
           </label>
           <input id="avatarInput" type="file" accept="image/png,image/jpeg,image/bmp" class="d-none" (change)="onFileSelected($event)" />
           <button type="button" class="btn btn-outline-danger btn-sm" (click)="onRemoveAvatar()" [disabled]="mode() === 'edit' ? (!selectedFileDataUrl && currentAvatarUrl() === null) : !selectedFileDataUrl">
-            <i class="bi bi-trash" aria-hidden="true"></i> Rimuovi avatar
+            <i class="bi bi-trash" aria-hidden="true"></i> Remove avatar
           </button>
         </div>
       </div>
@@ -33,24 +33,24 @@
         }
 
         <div class="mb-3">
-          <label for="name" class="form-label">Nome</label>
+          <label for="name" class="form-label">Name</label>
           <input #nameInput id="name" type="text" class="form-control" [class.is-invalid]="form.get('name')!.invalid && (form.get('name')!.dirty || !form.get('name')!.untouched)" [formControl]="$any(form.get('name'))" required />
-          <div class="invalid-feedback">Inserisci un nome.</div>
+          <div class="invalid-feedback">Enter a name.</div>
         </div>
 
         <div class="mb-3">
-          <label for="address" class="form-label">Indirizzo (IPv4:PORT)</label>
+          <label for="address" class="form-label">Address (IPv4:PORT)</label>
           <input id="address" type="text" class="form-control" [class.is-invalid]="form.get('address')!.invalid && (form.get('address')!.dirty || !form.get('address')!.untouched)" [formControl]="$any(form.get('address'))" [readonly]="mode() === 'edit'" required />
-          <div class="invalid-feedback">Formato richiesto: IPv4:PORT (es. 192.168.1.10:1234).</div>
-          @if (mode() === 'edit') { <div class="form-text">L'indirizzo non è modificabile.</div> }
+          <div class="invalid-feedback">Required format: IPv4:PORT (e.g. 192.168.1.10:1234).</div>
+          @if (mode() === 'edit') { <div class="form-text">Address cannot be changed.</div> }
         </div>
       </div>
     </div>
 
     <footer class="modal-footer d-flex justify-content-end gap-2">
-      <button type="button" class="btn btn-outline-secondary" (click)="onClose()">Annulla</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="onClose()">Cancel</button>
       <button type="submit" class="btn btn-primary" [disabled]="busy() || !hasChanges() || (mode() === 'create' && form.invalid)">
-        {{ mode() === 'create' ? 'Crea' : 'Salva' }}
+        {{ mode() === 'create' ? 'Create' : 'Save' }}
       </button>
     </footer>
   </form>

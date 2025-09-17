@@ -1,14 +1,14 @@
 <dialog #dlg class="config-dialog" (cancel)="$event.preventDefault()">
   <div class="content" [class.is-busy]="busy()">
     <header class="header d-flex align-items-center justify-content-between">
-      <h3 class="m-0">Configurazione</h3>
-      <button type="button" class="btn-close" (click)="close()" [disabled]="busy()" aria-label="Chiudi"></button>
+      <h3 class="m-0">Configuration</h3>
+      <button type="button" class="btn-close" (click)="close()" [disabled]="busy()" aria-label="Close"></button>
     </header>
 
     <div class="body">
       @if (showInvalidBanner()) {
         <div class="alert alert-warning py-2" role="alert">
-          Config non valido, reimpostati i default
+          Invalid config, defaults were reset
         </div>
       }
 
@@ -31,7 +31,7 @@
           <div class="mb-2">
             <label class="form-label">BaseUrl</label>
             <input type="text" class="form-control" [class.is-invalid]="!BaseUrl()" [ngModel]="BaseUrl()" name="baseUrl" (ngModelChange)="BaseUrl.set($event)" placeholder="http://10.211.55.3:3000" />
-            <div class="form-text">Esempio: http://http://10.211.55.3:3000</div>
+            <div class="form-text">Example: http://http://10.211.55.3:3000</div>
           </div>
 
           <div class="row g-2">

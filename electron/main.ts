@@ -35,9 +35,15 @@ async function createWindow() {
     registerExportHandlers();
     registerConfigHandlers();
 
+    const iconPath = app.isPackaged
+        ? path.join(__dirname, 'ui', 'logo.png')
+        : path.join(process.cwd(), 'app', 'public', 'logo.png');
+
     win = new BrowserWindow({
         width: 1200,
         height: 800,
+        title: 'Cockpit - Green Mower',
+        icon: iconPath,
         show: true,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),

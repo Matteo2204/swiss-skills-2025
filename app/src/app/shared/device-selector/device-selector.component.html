@@ -23,15 +23,15 @@
       <span class="avatar" aria-hidden="true">
         <span class="avatar-fallback"><i class="bi bi-person-circle" aria-hidden="true"></i></span>
       </span>
-      <span class="text-muted">Seleziona dispositivo…</span>
+      <span class="text-muted">Select device…</span>
     }
   </button>
 
   <ul class="dropdown-menu" aria-labelledby="deviceSelectorDropdown" role="menu">
     @if (error()) {
-      <li><span class="dropdown-item text-danger" role="presentation">Errore: {{ error() }}</span></li>
+      <li><span class="dropdown-item text-danger" role="presentation">Error: {{ error() }}</span></li>
     } @else if (!mowers().length && !loading()) {
-      <li><span class="dropdown-item text-muted" role="presentation">Nessun dispositivo</span></li>
+      <li><span class="dropdown-item text-muted" role="presentation">No devices</span></li>
     } @else {
       @for (m of mowers(); track m.id) {
         <li>
@@ -59,26 +59,26 @@
       <li>
         <button class="dropdown-item d-flex align-items-center gap-2" type="button" (click)="onAdd()">
           <i class="bi bi-plus-circle" aria-hidden="true"></i>
-          <span>Aggiungi dispositivo…</span>
+          <span>Add device…</span>
         </button>
       </li>
       <li>
         <button class="dropdown-item d-flex align-items-center gap-2" type="button" (click)="onEdit()" [disabled]="!current()">
           <i class="bi bi-pencil" aria-hidden="true"></i>
-          <span>Modifica selezionato…</span>
+          <span>Edit selected…</span>
         </button>
       </li>
       <li>
         <button class="dropdown-item text-danger d-flex align-items-center gap-2" type="button" (click)="onDelete()" [disabled]="!current()">
           <i class="bi bi-trash" aria-hidden="true"></i>
-          <span>Elimina selezionato…</span>
+          <span>Delete selected…</span>
         </button>
       </li>
       <li><hr class="dropdown-divider"/></li>
       <li>
         <button class="dropdown-item d-flex align-items-center gap-2" type="button" (click)="onClear()">
           <i class="bi bi-x-circle" aria-hidden="true"></i>
-          <span>Pulisci selezione</span>
+          <span>Clear selection</span>
         </button>
       </li>
     }
