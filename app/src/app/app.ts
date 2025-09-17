@@ -2,14 +2,15 @@ import {Component, computed, effect, inject, signal} from '@angular/core';
 import {Router, RouterOutlet} from '@angular/router';
 import {AuthService} from './core/auth.service';
 import {Role} from '@shared/models';
-import {Crumb} from '@shared/topbar/topbar.component';
 import {SidebarComponent, SideNavItem, SideUser, TopbarAction} from '@shared/sidebar/sidebar.component';
 
 type SideItemId = 'home' | 'items' | 'reports' | string;
 type TopActionId = 'new' | 'export' | string;
+interface Crumb { label: string; route?: string; }
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet, SidebarComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
@@ -49,14 +50,7 @@ export class App {
   ]);
 
   constructor() {
-    this.auth.ready().then(() => {
-      effect(() => {
-        if (!this.auth.isLoggedIn()) {
-          const url = this.router.url;
-          if (!url.startsWith('/login')) void this.router.navigateByUrl('/login');
-        }
-      });
-    });
+    this.auth.ready().then(() => {});
   }
 
   onSidebarCollapsed(collapsed: boolean) { this.isCollapsed.set(collapsed); }

@@ -4,11 +4,12 @@ import { initDB } from "./db";
 import { registerAuthHandlers } from "./ipc/auth"; // se hai anche altri handler, importali e chiamali
 import { createExpressServer } from "./server";
 import type { Server } from "http";
-import {registerItemHandlers} from "./ipc/items";
+import { registerItemHandlers } from "./ipc/items";
 import * as http from "node:http";
 
 let win: BrowserWindow | null = null;
 let expressServer: Server | null = null;
+let bundledUrl: string | null = null;
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
@@ -35,28 +36,56 @@ async function createWindow() {
         }
     });
 
-    if (!app.isPackaged) {
-        const url = 'http://127.0.0.1:4200';
+    const useDevServer = !app.isPackaged;
+    const devUrl = process.env.ELECTRON_START_URL ?? 'http://127.0.0.1:4200';
+    let shouldUseDevServer = useDevServer;
+
+    // Start Express API also in dev mode so Postman can reach /api endpoints.
+    // Static UI may be missing in dev; server will skip UI routes if not found.
+    if (!expressServer) {
+        const staticRoot = path.join(__dirname, "ui");
         try {
-            await waitForDevServer(url, 30000, 250);
+            const { url, server } = await createExpressServer(staticRoot, 3000);
+            expressServer = server;
+            bundledUrl = url; // keep URL handy for potential fallback
+            console.log('[main] Express API started at', url);
+        } catch (e) {
+            console.error('[main] failed to start Express API:', e);
+        }
+    }
+
+    if (useDevServer) {
+        try {
+            await waitForDevServer(devUrl, 100000, 250);
         } catch (e) {
             console.error('[main] Dev server not ready:', e);
+            shouldUseDevServer = false;
         }
-        win.webContents.on('did-fail-load', (_e, code, desc, _url, isMainFrame) => {
-            console.error('[main] did-fail-load', { code, desc, isMainFrame });
-        });
-        win.webContents.on('did-finish-load', () => {
-            console.log('[main] renderer loaded');
-        });
+    }
 
-        await win.loadURL(url);
+    let didFallback = false;
+    win.webContents.on('did-fail-load', async (_e, code, desc, url, isMainFrame) => {
+        console.error('[main] did-fail-load', { code, desc, url, isMainFrame });
+        if (!didFallback && shouldUseDevServer && code === -102 /* ERR_CONNECTION_REFUSED */) {
+            didFallback = true;
+            shouldUseDevServer = false;
+            if (win) {
+                try {
+                    await loadBundledUi(win);
+                } catch (err) {
+                    console.error('[main] fallback load failed:', err);
+                }
+            }
+        }
+    });
+    win.webContents.on('did-finish-load', () => {
+        console.log('[main] renderer loaded');
+    });
+
+    if (shouldUseDevServer) {
+        await win.loadURL(devUrl);
     } else {
-        // SERVE UI CON EXPRESS (stile progetto vecchio)
-        const staticRoot = path.join(__dirname, "ui"); // <— assicurati che la build Angular sia copiata qui
-        const { url, server } = await createExpressServer(staticRoot, 3000);
-        expressServer = server;
-        console.log("[main] PACKAGED →", url);
-        await win.loadURL(url);
+        await loadBundledUi(win);
     }
 
     win.once("ready-to-show", () => { win?.show(); win?.focus(); });
@@ -66,6 +95,7 @@ async function createWindow() {
         if (expressServer) {
             try { expressServer.close(); } catch { /* noop */ }
             expressServer = null;
+            bundledUrl = null;
         }
     });
 }
@@ -96,5 +126,23 @@ async function waitForDevServer(url: string, timeoutMs = 30000, intervalMs = 250
 }
 
 app.whenReady().then(createWindow);
-app.on("before-quit", async () => { try { expressServer?.close(); } catch {} });
+app.on("before-quit", async () => {
+    try { expressServer?.close(); } catch {}
+    finally {
+        expressServer = null;
+        bundledUrl = null;
+    }
+});
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
+
+async function loadBundledUi(target: BrowserWindow): Promise<void> {
+    const staticRoot = path.join(__dirname, "ui");
+    if (!expressServer) {
+        const { url, server } = await createExpressServer(staticRoot, 3000);
+        expressServer = server;
+        bundledUrl = url;
+        console.log('[main] Serving bundled UI →', url);
+    }
+    if (!bundledUrl) throw new Error('Bundled UI URL missing after server start');
+    await target.loadURL(bundledUrl);
+}

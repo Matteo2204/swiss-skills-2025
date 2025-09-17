@@ -8,6 +8,7 @@ import {ToastService} from '../../../../core/toastService';
 
 @Component({
   selector: 'app-items-component',
+  standalone: true,
   imports: [
     FormsModule,
     NgForOf,

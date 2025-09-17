@@ -1,0 +1,111 @@
+@base = http://localhost:3000
+
+### Login (returns token)
+# @name login
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123",
+  "remember": true
+}
+
+### List mowers
+GET {{base}}/api/lawnmowers
+
+### List mowers (filters)
+GET {{base}}/api/lawnmowers?name=MyMower&vendor=ACME&id=1
+
+### Create mower
+# @name createMower
+POST {{base}}/api/lawnmower
+Content-Type: application/json
+
+{
+  "name": "MyMower",
+  "vendor": "ACME",
+  "model": "X100",
+  "serial_number": "SN123",
+  "firmware": "1.0.0",
+  "home_lat": 46.0,
+  "home_lon": 7.0
+}
+
+### Get mower details
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}
+Authorization: Bearer {{login.response.body.token}}
+
+### Update mower
+PUT {{base}}/api/lawnmower
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "id": {{createMower.response.body.id}},
+  "name": "MyMower-Updated",
+  "firmware": "1.0.1"
+}
+
+### Delete mower
+DELETE {{base}}/api/lawnmower/{{createMower.response.body.id}}
+Authorization: Bearer {{login.response.body.token}}
+
+### Current battery (no auth required)
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/battery/current
+
+### Current GPS (no auth required)
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/gps/current
+
+### Current state (no auth required)
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/state/current
+
+### Battery history (last 7 days default)
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/battery/history?limit=100&offset=0
+
+### GPS history (custom range)
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/gps/history?from=2024-01-01T00:00:00Z&to=2024-12-31T23:59:59Z
+
+### State history (epoch ms)
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/state/history?from=1704067200000&to=1735603199000
+
+### Analytics: distance
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/analytics/distance
+
+### Analytics: hours
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/analytics/hours
+
+### Analytics: efficiency
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/analytics/efficiency
+
+### Analytics: energy
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/analytics/energy
+
+### Actions: start (may return 503 if no TCP connection)
+POST {{base}}/api/lawnmower/{{createMower.response.body.id}}/actions/start
+Authorization: Bearer {{login.response.body.token}}
+
+### Actions: stop
+POST {{base}}/api/lawnmower/{{createMower.response.body.id}}/actions/stop
+Authorization: Bearer {{login.response.body.token}}
+
+### Actions: home
+POST {{base}}/api/lawnmower/{{createMower.response.body.id}}/actions/home
+Authorization: Bearer {{login.response.body.token}}
+
+### Actions: ackerror
+POST {{base}}/api/lawnmower/{{createMower.response.body.id}}/actions/ackerror
+Authorization: Bearer {{login.response.body.token}}
+
+### Alerts: list (all)
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/alerts
+Authorization: Bearer {{login.response.body.token}}
+
+### Alerts: list (open only)
+GET {{base}}/api/lawnmower/{{createMower.response.body.id}}/alerts?openOnly=1
+Authorization: Bearer {{login.response.body.token}}
+
+### Alerts: clear one (replace :alertId)
+POST {{base}}/api/lawnmower/{{createMower.response.body.id}}/alerts/123/clear
+Authorization: Bearer {{login.response.body.token}}
+

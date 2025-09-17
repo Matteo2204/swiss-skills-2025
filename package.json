@@ -10,17 +10,15 @@
     "dev:angular": "npm --prefix app run start -- --port 4200 --open=false",
     "build:electron:watch": "tsc -p tsconfig.json -w",
     "run:electron": "wait-on dist/main.js http://localhost:4200 && nodemon --verbose --watch dist --ext js --exec \"electron .\"",
-
     "build": "npm run build:angular && npm run build:electron && npm run copy:ui && npm run copy:schema",
     "build:angular": "npm --prefix app run build",
     "build:electron": "tsc -p tsconfig.json",
+    "db:migrate": "npm run build:electron && node dist/db/run-migrations.js",
     "copy:ui": "mkdir -p dist/ui && cpx \"app/dist/app/browser/**/*\" dist/ui",
     "copy:schema": "mkdir -p dist/db && cpx \"electron/db/schema.mysql.sql\" dist/db",
-
+    "import:csv": "ts-node --transpile-only electron/db/import_legacy_csv.ts",
     "start": "electron .",
-
     "postinstall": "electron-builder install-app-deps",
-
     "pack:mac": "electron-builder --projectDir . --mac dmg",
     "pack:win": "electron-builder --projectDir . --win zip --x64"
   },
@@ -37,21 +35,38 @@
     "wait-on": "^8.0.4"
   },
   "dependencies": {
+    "express": "^5.1.0",
     "mysql2": "^3.11.3",
-    "express": "^5.1.0"
+    "ts-node": "^10.9.2"
   },
   "build": {
     "appId": "com.galassini.skill09",
     "productName": "Skill09App",
-    "directories": { "app": ".", "output": "release" },
-    "files": ["dist/**/*",
+    "directories": {
+      "app": ".",
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
       "electron/db/schema.mysql.sql",
       "electron/db/migrate.ts",
-      "electron/db/migrations/**/*"],
-    "asarUnpack": ["**/*.node"],
-    
-    "mac": { "target": ["dmg","zip"], "category": "public.app-category.utilities" },
-    "win": { "target": ["zip"] },
+      "electron/db/migrations/**/*"
+    ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "zip"
+      ]
+    },
     "dmg": {
       "title": "Skill09App-${version}-${arch}",
       "artifactName": "Skill09App-${version}-${arch}.${ext}"

@@ -9,7 +9,7 @@ function log(...a: unknown[]) { console.log('[migrate]', ...a); }
 
 /** Legge la versione attuale da app_meta (fallback 1 se non c’è) */
 export async function getSchemaVersion(db: DB): Promise<number> {
-    const row = await db.prepare("SELECT value FROM app_meta WHERE key='schema_version'")
+    const row = await db.prepare("SELECT `value` FROM app_meta WHERE `key`='schema_version'")
         .get() as { value: string } | undefined;
     return row ? Number(row.value) : 1;
 }

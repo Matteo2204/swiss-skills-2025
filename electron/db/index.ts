@@ -4,6 +4,7 @@ import path from 'path';
 import type { Pool, PoolOptions, ResultSetHeader } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
 import { hashPassword } from './utils';
+import { importLegacyFromCSV, ImportLegacyResult } from './import_legacy_csv';
 
 type Row = Record<string, any>;
 
@@ -44,14 +45,28 @@ function resolveMysqlSchemaPath(): string {
   throw new Error('schema.mysql.sql not found in expected locations');
 }
 
+function resolveLegacyCsvPath(): string | null {
+  const here = __dirname;
+  const cwd = process.cwd();
+  const candidates = [
+    path.join(here, 'import_legacy_csv.csv'),
+    path.join(cwd, 'electron', 'db', 'import_legacy_csv.csv'),
+  ];
+  for (const p of candidates) if (fs.existsSync(p)) return p;
+  return null;
+}
+
 async function ensureDatabaseExists(rootPool: Pool, dbName: string) {
   await rootPool.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`);
 }
 
 function splitSqlStatements(sql: string): string[] {
-  // naive splitter safe enough for our simple schema files
-  return sql
-    .split(/;\s*\n/)
+  // Split on semicolons outside of comments. For our schema, splitting on
+  // plain ';' is sufficient since we don't embed semicolons inside strings.
+  // Also strip block comments to avoid leftover artifacts.
+  const withoutBlockComments = sql.replace(/\/\*[\s\S]*?\*\//g, '');
+  return withoutBlockComments
+    .split(';')
     .map(s => s.trim())
     .filter(Boolean);
 }
@@ -98,6 +113,16 @@ function buildWrapper(p: Pool): DBClass {
 export function getDB(): DBClass {
   if (!db) throw new Error('DB not initialized. Call initDB() first.');
   return db;
+}
+
+export async function closeDB() {
+  if (!pool) return;
+  try {
+    await pool.end();
+  } finally {
+    pool = null;
+    db = null;
+  }
 }
 
 export async function initDB() {
@@ -154,5 +179,31 @@ export async function initDB() {
     await ins.run('admin', await hashPassword('admin123'), 'ADMIN');
     await ins.run('operator', await hashPassword('operator123'), 'OPERATOR');
     log('seeded users: admin/admin123, operator/operator123');
+  }
+
+  // One-time legacy CSV import (only if not yet imported or DB empty)
+  try {
+    const [mowerCountRow]: any = await pool.query('SELECT COUNT(*) c FROM mower');
+    const mowerCount = Array.isArray(mowerCountRow) && mowerCountRow.length ? Number(mowerCountRow[0].c ?? mowerCountRow[0]['COUNT(*)'] ?? 0) : 0;
+    const metaRow = await db.prepare("SELECT `value` FROM app_meta WHERE `key` = 'legacy_csv_import_done'").get();
+    const alreadyImported = String((metaRow as any)?.value ?? '') === '1';
+    const shouldImport = mowerCount === 0 || !alreadyImported;
+    if (shouldImport) {
+      const csv = resolveLegacyCsvPath();
+      if (csv) {
+        log('legacy CSV found, importing once:', csv);
+        const res: ImportLegacyResult = await importLegacyFromCSV(csv, { tz: 'Europe/Zurich', dryRun: false, batch: 500 });
+        if ((res.mowersCreated + res.mowersReused) > 0 || (res.statesInserted + res.battsInserted + res.gpsInserted) > 0) {
+          await pool.query("INSERT INTO app_meta(`key`,`value`) VALUES('legacy_csv_import_done','1') ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+          log('legacy CSV import completed.');
+        } else {
+          log('legacy CSV import produced no data; flag not set to allow retry next start.');
+        }
+      } else {
+        log('no legacy CSV found to import.');
+      }
+    }
+  } catch (e) {
+    log('legacy CSV import failed (non-fatal):', (e as Error)?.message);
   }
 }

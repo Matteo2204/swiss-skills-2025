@@ -18,12 +18,6 @@ html, body { height: 100%; }
 
 body { background-color: var(--bs-body-bg); }
 
-/* Topbar: clean, light background, brand accents */
-.app-topbar { background-color: #ffffff; color: var(--brand-1); }
-.app-topbar strong { color: var(--brand-1); }
-.app-topbar a { color: var(--brand-2); }
-.app-topbar .breadcrumb a { color: var(--brand-2); }
-
 /* Sidebar */
 .app-sidebar { background-color: #ffffff; position: relative; }
 .app-sidebar::after {
