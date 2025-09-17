@@ -15,7 +15,7 @@
     "build:electron": "tsc -p tsconfig.json",
     "db:migrate": "npm run build:electron && node dist/db/run-migrations.js",
     "copy:ui": "mkdir -p dist/ui && cpx \"app/dist/app/browser/**/*\" dist/ui",
-    "copy:schema": "mkdir -p dist/db && cpx \"electron/db/schema.mysql.sql\" dist/db",
+    "copy:schema": "mkdir -p dist/db && cpx \"electron/db/schema.mysql.sql\" dist/db && cpx \"electron/db/import_legacy_csv.csv\" dist/db",
     "import:csv": "ts-node --transpile-only electron/db/import_legacy_csv.ts",
     "start": "electron .",
     "postinstall": "electron-builder install-app-deps",
@@ -49,6 +49,7 @@
     "files": [
       "dist/**/*",
       "electron/db/schema.mysql.sql",
+      "electron/db/import_legacy_csv.csv",
       "electron/db/migrate.ts",
       "electron/db/migrations/**/*"
     ],

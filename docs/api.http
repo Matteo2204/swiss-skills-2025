@@ -34,12 +34,9 @@ Content-Type: application/json
 
 ### Get mower details
 GET {{base}}/api/lawnmower/{{createMower.response.body.id}}
-Authorization: Bearer {{login.response.body.token}}
 
 ### Update mower
 PUT {{base}}/api/lawnmower
-Content-Type: application/json
-Authorization: Bearer {{login.response.body.token}}
 
 {
   "id": {{createMower.response.body.id}},

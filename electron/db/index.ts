@@ -48,11 +48,32 @@ function resolveMysqlSchemaPath(): string {
 function resolveLegacyCsvPath(): string | null {
   const here = __dirname;
   const cwd = process.cwd();
-  const candidates = [
-    path.join(here, 'import_legacy_csv.csv'),
-    path.join(cwd, 'electron', 'db', 'import_legacy_csv.csv'),
-  ];
-  for (const p of candidates) if (fs.existsSync(p)) return p;
+  const res = (process as any).resourcesPath as string | undefined;
+  const candidates: string[] = [];
+  // 1) Near compiled file
+  candidates.push(path.join(here, 'import_legacy_csv.csv'));
+  candidates.push(path.join(here, '..', 'db', 'import_legacy_csv.csv'));
+  // 2) Project source layout
+  candidates.push(path.join(cwd, 'electron', 'db', 'import_legacy_csv.csv'));
+  // 3) Packaged Electron layouts
+  if (res) {
+    candidates.push(path.join(res, 'app.asar.unpacked', 'electron', 'db', 'import_legacy_csv.csv'));
+    candidates.push(path.join(res, 'app.asar', 'electron', 'db', 'import_legacy_csv.csv'));
+    candidates.push(path.join(res, 'app', 'electron', 'db', 'import_legacy_csv.csv'));
+    candidates.push(path.join(res, 'electron', 'db', 'import_legacy_csv.csv'));
+  }
+  for (const p of candidates) {
+    try { if (fs.existsSync(p)) return p; } catch {}
+  }
+  // Last resort: look upward from here
+  try {
+    let dir = here;
+    for (let i = 0; i < 4; i++) {
+      const p = path.join(dir, 'electron', 'db', 'import_legacy_csv.csv');
+      if (fs.existsSync(p)) return p;
+      dir = path.dirname(dir);
+    }
+  } catch {}
   return null;
 }
 
@@ -155,7 +176,12 @@ export async function initDB() {
   const schemaPath = resolveMysqlSchemaPath();
   log('using schema:', schemaPath);
   const ddl = fs.readFileSync(schemaPath, 'utf8');
-  await db.exec(ddl);
+  try {
+    await db.exec(ddl);
+  } catch (e) {
+    // Be resilient: allow server to start even if some DDL fails on existing DBs
+    log('schema apply failed (continuing):', (e as Error)?.message);
+  }
 
   // Migrate: ensure 'remember' column exists in sessions for older DBs
   try {
@@ -201,7 +227,7 @@ export async function initDB() {
           log('legacy CSV import produced no data; flag not set to allow retry next start.');
         }
       } else {
-        log('no legacy CSV found to import.');
+        log('no legacy CSV found to import. Looked in typical locations; ensure the file is packaged or provided alongside binaries.');
       }
     }
   } catch (e) {
