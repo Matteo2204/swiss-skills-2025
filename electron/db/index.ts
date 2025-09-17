@@ -147,7 +147,8 @@ export async function initDB() {
     try { await ensureDatabaseExists(rootPool, database); } finally { await rootPool.end(); }
   } catch {}
 
-  pool = await mysql.createPool({ ...baseOpts, database });
+  // Return DECIMAL as numbers and DATE/DATETIME as strings (YYYY-MM-DD / YYYY-MM-DD HH:mm:ss[.sss])
+  pool = await mysql.createPool({ ...baseOpts, database, decimalNumbers: true, dateStrings: true });
   db = buildWrapper(pool);
 
   // Apply schema

@@ -55,17 +55,31 @@ SET sql_notes = 0;
 CREATE TABLE IF NOT EXISTS `mower` (
   `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name`          VARCHAR(120)    NOT NULL,
+  `address`       VARCHAR(255)    NULL,
+  `postal_code`   VARCHAR(32)     NULL,
+  `city`          VARCHAR(120)    NULL,
+  `canton`        VARCHAR(32)     NULL,
   `vendor`        VARCHAR(80)     NULL,
   `model`         VARCHAR(80)     NULL,
   `serial_number` VARCHAR(120)    NULL,
   `firmware`      VARCHAR(80)     NULL,
   `home_lat`      DECIMAL(9,6)    NULL,
   `home_lon`      DECIMAL(9,6)    NULL,
+  `purchase_date` DATE            NULL,
+  `latest_maintenance` DATE       NULL,
   `created_at`    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_mower_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Backfill for existing databases (ignore if already present)
+ALTER TABLE `mower` ADD COLUMN `address`       VARCHAR(255)    NULL;
+ALTER TABLE `mower` ADD COLUMN `postal_code`   VARCHAR(32)     NULL;
+ALTER TABLE `mower` ADD COLUMN `city`          VARCHAR(120)    NULL;
+ALTER TABLE `mower` ADD COLUMN `canton`        VARCHAR(32)     NULL;
+ALTER TABLE `mower` ADD COLUMN `purchase_date` DATE            NULL;
+ALTER TABLE `mower` ADD COLUMN `latest_maintenance` DATE       NULL;
 
 CREATE TABLE IF NOT EXISTS `mower_state` (
   `id`       BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
@@ -164,12 +178,18 @@ CREATE OR REPLACE VIEW `v_mower_current` AS
 SELECT
   m.id                AS mower_id,
   m.name,
+  m.address,
+  m.postal_code,
+  m.city,
+  m.canton,
   m.vendor,
   m.model,
   m.serial_number,
   m.firmware,
   m.home_lat,
   m.home_lon,
+  m.purchase_date,
+  m.latest_maintenance,
   ls.`state`          AS currentState,
   lb.`level`          AS currentBatteryLevel,
   lg.`lat`            AS currentLatitude,

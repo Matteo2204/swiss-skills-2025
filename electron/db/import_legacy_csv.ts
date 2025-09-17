@@ -219,6 +219,7 @@ type ColMap = {
   name: number; vendor: number; model: number; serial: number; firmware: number;
   homeLat: number; homeLon: number;
   addr: number; postal: number; city: number; canton: number;
+  purchase: number; latestMaint: number;
   ts: number; lat: number; lon: number; state: number; battery: number; tz: number;
 };
 
@@ -235,6 +236,8 @@ function buildColMap(headers: string[]): ColMap {
     postal: findCol(headers, ['postalcode','postcode','zip']),
     city:   findCol(headers, ['city','town']),
     canton: findCol(headers, ['canton']),
+    purchase: findCol(headers, ['purchasedate','purchased','purchase']),
+    latestMaint: findCol(headers, ['latestmaintenance','lastmaintenance','maintenancedate','maintenance']),
     ts:     findCol(headers, ['timestamp','datetime','time','ts']),
     lat:    findCol(headers, ['latitude','lat']),
     lon:    findCol(headers, ['longitude','lon','lng']),
@@ -248,6 +251,31 @@ function deriveNameFromLocation(city?: string, postal?: string, addr?: string): 
   const parts = [sanitizeText(city), sanitizeText(postal), sanitizeText(addr)].filter(Boolean);
   const s = parts.join('-').slice(0, 120);
   return s || 'mower-unknown';
+}
+
+function normalizeDateOnly(s: string | undefined | null): string {
+  const x = sanitizeText(s);
+  if (!x) return '';
+  // yyyy-mm-dd or yyyy/mm/dd or yyyy.mm.dd
+  let m = x.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+  if (m) {
+    const yyyy = m[1];
+    const MM = String(Number(m[2])).padStart(2, '0');
+    const dd = String(Number(m[3])).padStart(2, '0');
+    return `${yyyy}-${MM}-${dd}`;
+  }
+  // dd.mm.yyyy or dd/mm/yyyy or dd-mm-yyyy
+  m = x.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
+  if (m) {
+    const dd = String(Number(m[1])).padStart(2, '0');
+    const MM = String(Number(m[2])).padStart(2, '0');
+    const yyyy = m[3];
+    return `${yyyy}-${MM}-${dd}`;
+  }
+  // Fallback: if something like "2021-03-15 00:00:00" take date part
+  const m2 = x.match(/^(\d{4}-\d{2}-\d{2})\b/);
+  if (m2) return m2[1];
+  return '';
 }
 
 // DB helpers
@@ -268,7 +296,24 @@ async function createPool(): Promise<Pool> {
   return mysql.createPool(opts);
 }
 
-async function ensureMower(pool: Pool, cache: Map<string, number>, name: string, vendor?: string, model?: string, serial?: string, firmware?: string, homeLat?: number|null, homeLon?: number|null, dryRun = false): Promise<{ id: number; created: boolean }> {
+async function ensureMower(
+  pool: Pool,
+  cache: Map<string, number>,
+  name: string,
+  vendor?: string,
+  model?: string,
+  serial?: string,
+  firmware?: string,
+  homeLat?: number|null,
+  homeLon?: number|null,
+  address?: string|null,
+  postal?: string|null,
+  city?: string|null,
+  canton?: string|null,
+  purchaseDate?: string|null,
+  latestMaintenance?: string|null,
+  dryRun = false
+): Promise<{ id: number; created: boolean }> {
   const existing = cache.get(name);
   if (existing) return { id: existing, created: false };
   // check DB first
@@ -284,8 +329,22 @@ async function ensureMower(pool: Pool, cache: Map<string, number>, name: string,
     return { id: -1, created: true };
   }
   const [res] = await pool.execute<any>(
-    'INSERT INTO mower (name, vendor, model, serial_number, firmware, home_lat, home_lon) VALUES (?,?,?,?,?,?,?)',
-    [name, vendor || null, model || null, serial || null, firmware || null, homeLat ?? null, homeLon ?? null]
+    'INSERT INTO mower (name, vendor, model, serial_number, firmware, home_lat, home_lon, address, postal_code, city, canton, purchase_date, latest_maintenance) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+    [
+      name,
+      vendor || null,
+      model || null,
+      serial || null,
+      firmware || null,
+      homeLat ?? null,
+      homeLon ?? null,
+      address || null,
+      postal || null,
+      city || null,
+      canton || null,
+      purchaseDate || null,
+      latestMaintenance || null,
+    ]
   );
   const insertId = (res && typeof res.insertId === 'number') ? res.insertId : undefined;
   if (!insertId) {
@@ -416,6 +475,9 @@ export async function importLegacyFromCSV(filePath: string, options?: ImportLega
     const addr = sanitizeText(get(cmap!.addr));
     const postal = sanitizeText(get(cmap!.postal));
     const city = sanitizeText(get(cmap!.city));
+    const canton = sanitizeText(get(cmap!.canton));
+    const purchaseDate = normalizeDateOnly(get(cmap!.purchase));
+    const latestMaint = normalizeDateOnly(get(cmap!.latestMaint));
     const tzRow = sanitizeText(get(cmap!.tz)) || opts.tz;
     const tsRaw = sanitizeText(get(cmap!.ts));
 
@@ -435,7 +497,24 @@ export async function importLegacyFromCSV(filePath: string, options?: ImportLega
     // Ensure mower id (dry-run: non scrive, ma controlla esistenza)
     let mowerId: number | null = null;
     try {
-      const { id, created } = await ensureMower(pool, mowerCache, name, vendor || undefined, model || undefined, serial || undefined, firmware || undefined, homeLat, homeLon, opts.dryRun);
+      const { id, created } = await ensureMower(
+        pool,
+        mowerCache,
+        name,
+        vendor || undefined,
+        model || undefined,
+        serial || undefined,
+        firmware || undefined,
+        homeLat,
+        homeLon,
+        addr || null,
+        postal || null,
+        city || null,
+        canton || null,
+        purchaseDate || null,
+        latestMaint || null,
+        opts.dryRun
+      );
       if (created) createdNames.add(name); else reusedNames.add(name);
       mowerId = id;
     } catch (e) {

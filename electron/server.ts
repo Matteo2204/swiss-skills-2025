@@ -193,7 +193,9 @@ export async function createExpressServer(
                 if (d / dtMin > 500) continue;
                 meters += d;
             }
-            res.json({ meters: Math.round(meters) });
+            const m = Math.round(meters);
+            // Keep existing 'meters' for backward compat; add spec key
+            res.json({ meters: m, totalDistance: m });
         } catch (e) {
             console.error('[api distance] error', e);
             res.status(500).json({ error: 'SERVER_ERROR' });
@@ -237,8 +239,8 @@ export async function createExpressServer(
                 if (dt <= 0) continue;
                 if (cur.state === 'Mowing') mowingMs += dt;
             }
-            const hours = mowingMs / 3600000;
-            res.json({ hours: Math.round(hours * 100) / 100 });
+            const hours = Math.round((mowingMs / 3600000) * 100) / 100;
+            res.json({ hours, operationalHours: hours });
         } catch (e) {
             console.error('[api hours] error', e);
             res.status(500).json({ error: 'SERVER_ERROR' });
@@ -284,17 +286,30 @@ export async function createExpressServer(
                 durations.set(cur.state, (durations.get(cur.state) ?? 0) + dt);
                 total += dt;
             }
-            const byState: Record<string, number> = {};
-            if (total > 0) {
-                for (const [state, ms] of durations) {
-                    const pct = (ms / total) * 100;
-                    byState[state] = Math.round(pct * 10) / 10; // 1 decimale
-                }
-            }
-            res.json({ byState });
+            const h = (ms: number) => Math.round((ms / 3600000) * 10) / 10;
+            const timeMowing = h(durations.get('Mowing') ?? 0);
+            const timeReturningToStation = h(durations.get('Docking') ?? 0);
+            const timeError = h(durations.get('Stuck') ?? 0);
+            // Not explicitly tracked in our state model; default to 0 unless present
+            const timePaused = h(durations.get('Paused') ?? 0);
+            const timeCharging = h(durations.get('Charging') ?? 0);
+            const denom = (timeMowing + timePaused + timeError + timeCharging + timeReturningToStation);
+            const efficiencyPercentage = denom > 0 ? Math.round((timeMowing / denom) * 1000) / 10 : 0;
+            res.json({ timeMowing, timePaused, timeError, timeCharging, timeReturningToStation, efficiencyPercentage });
         } catch (e) {
             console.error('[api efficiency] error', e);
             res.status(500).json({ error: 'SERVER_ERROR' });
+        }
+    });
+
+    // Spec typo alias: /analytics/efficency -> redirect to /analytics/efficiency (preserve query)
+    app.get('/api/lawnmower/:id/analytics/efficency', (req, res) => {
+        try {
+            const id = encodeURIComponent(String(req.params.id));
+            const q = req.url.includes('?') ? ('?' + req.url.split('?')[1]) : '';
+            res.redirect(307, `/api/lawnmower/${id}/analytics/efficiency${q}`);
+        } catch {
+            res.redirect(307, `/api/lawnmower/${req.params.id}/analytics/efficiency`);
         }
     });
 
@@ -371,12 +386,19 @@ export async function createExpressServer(
             }
             const decayPerHour = totalHours > 0 ? Math.round((totalDecay / totalHours) * 10) / 10 : 0;
 
+            const maxLvl = Number.isFinite(maxLevel) ? Math.round(maxLevel) : 0;
+            const minLvl = Number.isFinite(minLevel) ? Math.round(minLevel) : 0;
+            // Keep old keys and add spec-compliant aliases
             res.json({
                 chargeCycles,
-                avgChargeMinutes, // integer
-                maxLevel: Number.isFinite(maxLevel) ? Math.round(maxLevel) : 0,
-                minLevel: Number.isFinite(minLevel) ? Math.round(minLevel) : 0,
-                decayPerHour,
+                avgChargeMinutes, // legacy key (minutes)
+                maxLevel: maxLvl, // legacy key
+                minLevel: minLvl, // legacy key
+                decayPerHour,     // legacy key (percentage points/hour)
+                averageRechargeTime: avgChargeMinutes,
+                maxBatteryLevel: maxLvl,
+                minBatteryLevel: minLvl,
+                avgBatteryLost: decayPerHour,
             });
         } catch (e) {
             console.error('[api energy] error', e);
@@ -406,9 +428,26 @@ export async function createExpressServer(
             const row = await db().prepare(`SELECT ${v.cols} FROM ${v.view} WHERE mower_id = ?`).get(mowerId);
             if (!row) return res.json({});
             // Ensure compact payload
-            if (kind === "battery") return res.json({ ts: row.ts, level: Number(row.level) });
-            if (kind === "gps") return res.json({ ts: row.ts, lat: Number(row.lat), lon: Number(row.lon) });
-            return res.json({ ts: row.ts, state: String(row.state) });
+            if (kind === "battery") {
+                const level = Number(row.level);
+                const payload = { ts: row.ts, level } as any;
+                // Spec aliases
+                (payload as any).timestamp = row.ts;
+                (payload as any).batteryLevel = level;
+                return res.json(payload);
+            }
+            if (kind === "gps") {
+                const lat = Number(row.lat), lon = Number(row.lon);
+                const payload = { ts: row.ts, lat, lon } as any;
+                // Spec aliases
+                (payload as any).timestamp = row.ts;
+                (payload as any).latitude = lat;
+                (payload as any).longitude = lon;
+                return res.json(payload);
+            }
+            const payload = { ts: row.ts, state: String(row.state) } as any;
+            (payload as any).timestamp = row.ts;
+            return res.json(payload);
         } catch (e: any) {
             console.error("[api] current error:", e);
             return res.status(500).json({ error: "internal error" });
@@ -456,11 +495,27 @@ export async function createExpressServer(
 
             const rows = await db().prepare(sql).all(...args);
             if (kind === "battery") {
-                return res.json(rows.map((r: any) => ({ ts: r.ts, level: Number(r.level) })));
+                return res.json(rows.map((r: any) => ({
+                    ts: r.ts,
+                    level: Number(r.level),
+                    timestamp: r.ts,
+                    batteryLevel: Number(r.level),
+                })));
             } else if (kind === "gps") {
-                return res.json(rows.map((r: any) => ({ ts: r.ts, lat: Number(r.lat), lon: Number(r.lon) })));
+                return res.json(rows.map((r: any) => ({
+                    ts: r.ts,
+                    lat: Number(r.lat),
+                    lon: Number(r.lon),
+                    timestamp: r.ts,
+                    latitude: Number(r.lat),
+                    longitude: Number(r.lon),
+                })));
             } else {
-                return res.json(rows.map((r: any) => ({ ts: r.ts, state: String(r.state) })));
+                return res.json(rows.map((r: any) => ({
+                    ts: r.ts,
+                    state: String(r.state),
+                    timestamp: r.ts,
+                })));
             }
         } catch (e: any) {
             console.error("[api] history error:", e);
